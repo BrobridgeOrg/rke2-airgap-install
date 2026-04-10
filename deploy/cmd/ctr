@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+exec /var/lib/rancher/rke2/bin/ctr \
+  --address /run/k3s/containerd/containerd.sock \
+  "$@"
