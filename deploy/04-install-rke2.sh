@@ -49,7 +49,7 @@ echo "Artifacts: ${ARTIFACTS_DIR}"
 echo ""
 
 echo "[1] Installing RKE2"
-INSTALL_RKE2_ARTIFACT_PATH="${ARTIFACTS_DIR}" \
+sudo INSTALL_RKE2_ARTIFACT_PATH="${ARTIFACTS_DIR}" \
 INSTALL_RKE2_TYPE="${ROLE}" \
   "${ARTIFACTS_DIR}/install.sh"
 

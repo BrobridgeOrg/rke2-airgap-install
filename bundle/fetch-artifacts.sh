@@ -9,7 +9,6 @@ CNI="canal"
 INGRESS="traefik"
 DEST_DIR="./artifacts"
 BASE_URL="https://github.com/rancher/rke2/releases/download"
-DOWNLOAD_BINARY=false
 
 # Usage
 usage() {
@@ -23,13 +22,11 @@ Options:
   -i, --ingress   Ingress controller: nginx | traefik | none  (default: ${INGRESS})
   -d, --dest      Download destination path  (default: ${DEST_DIR})
   -u, --url       Source URL prefix  (default: ${BASE_URL})
-      --binary     Also download the RKE2 binary
   -h, --help      Show this help
 
 Examples:
   $(basename "$0") --version v1.35.3+rke2r1 --cni cilium
   $(basename "$0") --version v1.35.3+rke2r1 --ingress traefik
-  $(basename "$0") --version v1.35.3+rke2r1 --binary
   $(basename "$0") --url https://prime.repo.rancher.com/artifacts/rke2 --version v1.35.3+rke2r1
 EOF
   exit 0
@@ -44,7 +41,6 @@ while [[ $# -gt 0 ]]; do
     -i|--ingress) INGRESS="$2";      shift 2 ;;
     -d|--dest)    DEST_DIR="$2";     shift 2 ;;
     -u|--url)     BASE_URL="$2";     shift 2 ;;
-    --binary)     DOWNLOAD_BINARY=true; shift ;;
     -h|--help)    usage ;;
     *) echo "Unknown option: $1"; usage ;;
   esac
@@ -69,12 +65,7 @@ echo ""
 
 echo "[1] Core artifacts"
 download "sha256sum-${ARCH}.txt"
-
-if [[ "${DOWNLOAD_BINARY}" == true ]]; then
-  download "rke2.linux-${ARCH}.tar.gz"
-else
-  echo "  -> Skipping RKE2 binary (use --binary to include)"
-fi
+download "rke2.linux-${ARCH}.tar.gz"
 
 echo "[2] Image tarballs"
 download "rke2-images-core.linux-${ARCH}.tar.zst"
