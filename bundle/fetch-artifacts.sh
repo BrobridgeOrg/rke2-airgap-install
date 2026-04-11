@@ -53,10 +53,13 @@ done
 # main
 mkdir -p "${DEST_DIR}"
 
+# URL-encode version string (e.g. v1.35.3+rke2r1 -> v1.35.3%2Brke2r1)
+RKE2_VERSION_ENCODED="${RKE2_VERSION//+/%2B}"
+
 download() {
   local file="$1"
   echo "  -> ${file}"
-  curl -fL --progress-bar "${BASE_URL}/${RKE2_VERSION}/${file}" \
+  curl -fL --progress-bar "${BASE_URL}/${RKE2_VERSION_ENCODED}/${file}" \
     -o "${DEST_DIR}/${file}"
 }
 
