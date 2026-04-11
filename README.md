@@ -1,4 +1,4 @@
-# rke2-airgap-install
+# RKE2 Air-Gap install
 
 Bash scripts and Makefiles for installing [RKE2](https://docs.rke2.io/) in air-gapped (offline) environments on RHEL.
 
