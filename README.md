@@ -29,6 +29,19 @@ make prepare    # fetch artifacts, sync RPM repo, generate config
 make bundle     # package everything into rke2-airgap-<version>-<arch>.tar.gz
 ```
 
+#### Extra images (optional)
+
+To pre-load additional image tarballs (`.tar`, `.tar.gz`, `.tar.zst`) before RKE2 starts, place them in `output/images/` before running `make bundle`:
+
+```
+output/
+  images/
+    my-app.tar.zst
+    another-image.tar.gz
+```
+
+During installation, `scripts/05-load-extra-images.sh` copies them into `/var/lib/rancher/rke2/agent/images/` so RKE2 loads them automatically on startup. If `images/` is empty or absent, the step is skipped.
+
 Transfer the `.tar.gz` to the air-gap machine, then extract it:
 
 ```bash
@@ -46,19 +59,6 @@ Run the interactive installer:
 It reads `config.yaml` and `artifacts/` to auto-detect role, CNI, and CIS settings, then runs the numbered scripts in `scripts/` in order.
 
 > **CIS hardening**: if enabled, kernel parameters take effect immediately. A reboot after installation is recommended to verify settings persist.
-
-### Extra images (optional)
-
-To pre-load additional image tarballs (`.tar`, `.tar.gz`, `.tar.zst`) before RKE2 starts, place them in the `images/` directory before running `make bundle`:
-
-```
-output/
-  images/
-    my-app.tar.zst
-    another-image.tar.gz
-```
-
-During installation, `scripts/05-load-extra-images.sh` copies them into `/var/lib/rancher/rke2/agent/images/` so RKE2 loads them automatically on startup. If `images/` is empty or absent, the step is skipped.
 
 ### 4. Use kubectl
 
