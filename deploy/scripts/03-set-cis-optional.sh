@@ -4,6 +4,7 @@ set -euo pipefail
 
 # Defaults
 ROLE="server"
+YES="false"
 
 # Usage
 usage() {
@@ -13,11 +14,13 @@ Usage: $(basename "$0") [options]
 Options:
   -r, --role   Node role: server | agent  (default: ${ROLE})
                server: also creates etcd user for control-plane
+  -y, --yes    Skip confirmation prompt
   -h, --help   Show this help
 
 Examples:
   $(basename "$0") --role server
   $(basename "$0") --role agent
+  $(basename "$0") --role server --yes
 EOF
   exit 0
 }
@@ -26,6 +29,7 @@ EOF
 while [[ $# -gt 0 ]]; do
   case "$1" in
     -r|--role) ROLE="$2"; shift 2 ;;
+    -y|--yes)  YES="true"; shift ;;
     -h|--help) usage ;;
     *) echo "Unknown option: $1"; usage ;;
   esac
@@ -37,15 +41,17 @@ case "${ROLE}" in
 esac
 
 # Confirm
-echo "This script applies CIS hardening to the node."
-echo "It will modify kernel parameters and require a reboot before installing RKE2."
-echo ""
-read -r -p "Are you sure you want to enable CIS hardening? [y/N] " CONFIRM
-if [[ ! "${CONFIRM}" =~ ^[Yy]$ ]]; then
-  echo "Aborted."
-  exit 0
+if [[ "${YES}" != "true" ]]; then
+  echo "This script applies CIS hardening to the node."
+  echo "It will modify kernel parameters and require a reboot before installing RKE2."
+  echo ""
+  read -r -p "Are you sure you want to enable CIS hardening? [y/N] " CONFIRM
+  if [[ ! "${CONFIRM}" =~ ^[Yy]$ ]]; then
+    echo "Aborted."
+    exit 0
+  fi
+  echo ""
 fi
-echo ""
 
 # main
 echo "Role: ${ROLE}"
@@ -72,6 +78,6 @@ if [[ "${ROLE}" == "server" ]]; then
 fi
 
 echo ""
-echo "Done. Reboot the node, then proceed to install RKE2."
+echo "Done. CIS kernel parameters are active immediately."
+echo "Reboot the node after installation to verify settings persist across reboots."
 echo "  sudo reboot"
-echo "  ./04-install-rke2.sh --role server"

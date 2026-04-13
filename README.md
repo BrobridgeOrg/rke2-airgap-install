@@ -37,16 +37,15 @@ tar -xzf rke2-airgap-v1.35.3+rke2r1-amd64.tar.gz
 
 ### 3. Deploy (air-gap machine)
 
-Run the numbered scripts in order:
+Run the interactive installer:
 
 ```bash
-./01-import-rpm-repo.sh
-./02-set-firewalld.sh --role server --cni canal
-./04-install-rke2.sh --role server
-./05-start-rke2.sh --role server
+./install.sh
 ```
 
-> **CIS hardening** (optional): run `./03-set-cis-optional.sh` between steps 2 and 4. A reboot is required before proceeding.
+It will ask for role, CNI, and whether to apply CIS hardening, then run the numbered scripts in `scripts/` in order.
+
+> **CIS hardening**: if enabled, kernel parameters take effect immediately. A reboot after installation is recommended to verify settings persist.
 
 ### 4. Use kubectl
 
