@@ -91,17 +91,33 @@ All options are set in `config.env` (copied from `config.env.example`):
 
 ## Multi-node Setup
 
-Generate a separate bundle for each node role. For additional server nodes and agents, set `SERVER_URL` to the first server's address:
+Generate a separate bundle for each node. Edit `config.env` for each node before running `make prepare`.
 
+**First server**
 ```bash
-# First server
-make prepare TOKEN=secret NODE_NAME=node1 NODE_IP=192.168.1.10
+# config.env
+TOKEN=secret
+NODE_NAME=node1
+NODE_IP=192.168.1.10
+```
 
-# Additional server
-make prepare TOKEN=secret NODE_NAME=node2 NODE_IP=192.168.1.11 SERVER_URL=https://192.168.1.10:9345
+**Additional server**
+```bash
+# config.env
+TOKEN=secret
+NODE_NAME=node2
+NODE_IP=192.168.1.11
+SERVER_URL=https://192.168.1.10:9345
+```
 
-# Agent
-make prepare ROLE=agent TOKEN=secret NODE_NAME=node3 NODE_IP=192.168.1.12 SERVER_URL=https://192.168.1.10:9345
+**Agent**
+```bash
+# config.env
+ROLE=agent
+TOKEN=secret
+NODE_NAME=node3
+NODE_IP=192.168.1.12
+SERVER_URL=https://192.168.1.10:9345
 ```
 
 ## Make Targets
