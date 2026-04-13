@@ -5,7 +5,9 @@ Bash scripts and Makefiles for installing [RKE2](https://docs.rke2.io/) in air-g
 ## Requirements
 
 **Online machine** (bundle preparation):
+- `git`, `make`
 - `curl`
+- `vim` (or any text editor, for editing `config.env`)
 - `createrepo_c`, `dnf-plugins-core` (RPM repo sync, RHEL only)
 
 **Air-gap machine** (deployment):
