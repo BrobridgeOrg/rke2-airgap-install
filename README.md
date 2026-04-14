@@ -42,7 +42,7 @@ output/
     another-image.tar.gz
 ```
 
-During installation, `scripts/05-load-extra-images.sh` copies them into `/var/lib/rancher/rke2/agent/images/` so RKE2 loads them automatically on startup. If `images/` is empty or absent, the step is skipped.
+During installation, `scripts/05-prepare-node.sh` copies them into `/var/lib/rancher/rke2/agent/images/` so RKE2 loads them automatically on startup. If `images/` is empty or absent, the step is skipped.
 
 Transfer the `.tar.gz` to the air-gap machine, then extract it:
 
