@@ -6,6 +6,8 @@ set -euo pipefail
 ROLE="server"
 CONFIG_SRC="./config.yaml"
 CONFIG_DEST="/etc/rancher/rke2/config.yaml"
+REGISTRIES_SRC="./registries.yaml"
+REGISTRIES_DEST="/etc/rancher/rke2/registries.yaml"
 
 # Usage
 usage() {
@@ -52,6 +54,11 @@ echo "[1] Copying config"
 sudo mkdir -p "$(dirname "${CONFIG_DEST}")"
 sudo cp "${CONFIG_SRC}" "${CONFIG_DEST}"
 echo "  -> ${CONFIG_DEST}"
+
+if [[ -f "${REGISTRIES_SRC}" ]]; then
+  sudo cp "${REGISTRIES_SRC}" "${REGISTRIES_DEST}"
+  echo "  -> ${REGISTRIES_DEST}"
+fi
 
 echo "[2] Enabling and starting rke2-${ROLE}"
 sudo systemctl enable --now rke2-${ROLE}
