@@ -86,6 +86,7 @@ All options are set in `config.env` (copied from `config.env.example`):
 | `INGRESS` | | `traefik` | `traefik` \| `nginx` \| `none` |
 | `TLS_SANS` | | — | Extra SANs appended to NODE_NAME and NODE_IP |
 | `CIS` | | `false` | Enable CIS hardening profile |
+| `SCHEDULABLE` | | `true` | `false`: add `CriticalAddonsOnly=true:NoExecute` taint (dedicated control plane) |
 | `DISABLE_CLOUD_CONTROLLER` | | `false` | Disable built-in cloud controller |
 | `DISABLE_KUBE_PROXY` | | `false` | Disable kube-proxy (recommended with Cilium) |
 | `REGISTRY` | | — | Private registry hostname for air-gap |

@@ -10,6 +10,7 @@ OUT_DIR       ?= output
 # gen-config options
 ROLE                    ?= server
 CIS                     ?= false
+SCHEDULABLE             ?= true
 DISABLE_CLOUD_CONTROLLER ?= false
 DISABLE_KUBE_PROXY       ?= false
 TOKEN      ?=
@@ -48,6 +49,7 @@ config:
 		$(if $(SERVER_URL),--server-url $(SERVER_URL),) \
 		$(if $(TLS_SANS),--tls-san "$(TLS_SANS)",) \
 		$(if $(filter true,$(CIS)),--cis,) \
+		$(if $(filter false,$(SCHEDULABLE)),--no-schedule,) \
 		$(if $(filter true,$(DISABLE_CLOUD_CONTROLLER)),--disable-cloud-controller,) \
 		$(if $(filter true,$(DISABLE_KUBE_PROXY)),--disable-kube-proxy,) \
 		$(if $(REGISTRY),--registry $(REGISTRY),)

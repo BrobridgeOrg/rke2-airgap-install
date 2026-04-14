@@ -12,6 +12,7 @@ TLS_SANS=""
 CNI="canal"
 INGRESS="traefik"
 CIS=false
+SCHEDULABLE=true
 DISABLE_CLOUD_CONTROLLER=false
 DISABLE_KUBE_PROXY=false
 REGISTRY=""
@@ -35,6 +36,7 @@ Options:
   -c, --cni         CNI type: canal | cilium | calico | none  (default: ${CNI})
   -i, --ingress     Ingress controller: nginx | traefik | none  (default: ${INGRESS})
       --cis                     Enable CIS hardening profile
+      --no-schedule             Add CriticalAddonsOnly=true:NoExecute taint (dedicated control plane)
       --disable-cloud-controller  Disable built-in cloud controller manager
       --disable-kube-proxy        Disable kube-proxy (e.g. when using Cilium)
       --registry    Private registry for air-gap (e.g. registry.example.com)
@@ -60,7 +62,8 @@ while [[ $# -gt 0 ]]; do
        --tls-san)     TLS_SANS="$2";    shift 2 ;;
     -c|--cni)         CNI="$2";         shift 2 ;;
     -i|--ingress)     INGRESS="$2";     shift 2 ;;
-       --cis)                      CIS=true;                      shift ;;
+       --cis)                      CIS=true;          shift ;;
+       --no-schedule)              SCHEDULABLE=false; shift ;;
        --disable-cloud-controller) DISABLE_CLOUD_CONTROLLER=true; shift ;;
        --disable-kube-proxy)       DISABLE_KUBE_PROXY=true;       shift ;;
        --registry)                 REGISTRY="$2";                 shift 2 ;;
@@ -122,6 +125,11 @@ mkdir -p "$(dirname "${OUT_FILE}")"
     for san in ${TLS_SANS}; do
       echo "  - ${san}"
     done
+
+    if [[ "${SCHEDULABLE}" == false ]]; then
+      echo "node-taint:"
+      echo '  - "CriticalAddonsOnly=true:NoExecute"'
+    fi
   fi
 
   echo ""
