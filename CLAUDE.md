@@ -24,8 +24,8 @@ deploy/                    ← air-gap machine: interactive installer and script
     02-set-firewalld.sh      ← opens required firewall ports and CNI interfaces
     03-set-cis-optional.sh   ← applies CIS kernel hardening (optional)
     04-install-rke2.sh       ← runs install.sh with artifact path and role
-    05-load-extra-images.sh  ← copies extra image tarballs into agent images dir (optional)
-    06-start-rke2.sh         ← copies config.yaml and starts rke2 systemd service
+    05-prepare-node.sh       ← copies config files and pre-loads extra images
+    06-start-rke2.sh         ← starts rke2 systemd service
   cmd/                     ← wrapper scripts for kubectl, crictl, ctr
 ```
 
