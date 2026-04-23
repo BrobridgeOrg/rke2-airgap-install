@@ -14,6 +14,7 @@ SCHEDULABLE             ?= true
 DISABLE_CLOUD_CONTROLLER ?= false
 DISABLE_KUBE_PROXY       ?= false
 RANCHER_PRIME ?= false
+TIMEZONE      ?= Asia/Taipei
 TOKEN      ?=
 NODE_NAME  ?=
 NODE_IP    ?=
@@ -51,10 +52,12 @@ config:
 		$(if $(filter false,$(SCHEDULABLE)),--no-schedule,) \
 		$(if $(filter true,$(DISABLE_CLOUD_CONTROLLER)),--disable-cloud-controller,) \
 		$(if $(filter true,$(DISABLE_KUBE_PROXY)),--disable-kube-proxy,) \
-		$(if $(filter true,$(RANCHER_PRIME)),--rancher-prime,)
+		$(if $(filter true,$(RANCHER_PRIME)),--rancher-prime,) \
+		$(if $(TIMEZONE),--timezone "$(TIMEZONE)",)
 
 prepare: fetch rpm-repo config
 	cp -r deploy/. $(OUT_DIR)/
+	echo "$(RKE2_VERSION)" > $(OUT_DIR)/rke2-version.txt
 	@echo ""
 	@echo "Output ready at: $(OUT_DIR)"
 

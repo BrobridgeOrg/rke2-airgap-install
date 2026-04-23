@@ -164,24 +164,24 @@ read -r -p "Press Enter to begin, or Ctrl+C to cancel..."
 
 # ── run scripts ───────────────────────────────────────────────────────────────
 
-run_step "01 · Import RPM repo" \
+run_step "Import RPM repo" \
   "${SCRIPTS_DIR}/01-import-rpm-repo.sh"
 
-run_step "02 · Configure firewall" \
+run_step "Configure firewall" \
   "${SCRIPTS_DIR}/02-set-firewalld.sh" --role "${ROLE}" --cni "${CNI}"
 
 if [[ "${CIS}" == "true" ]]; then
-  run_step "03 · Apply CIS hardening" \
+  run_step "Apply CIS hardening" \
     "${SCRIPTS_DIR}/03-set-cis-optional.sh" --role "${ROLE}" --yes
 fi
 
-run_step "04 · Install RKE2" \
+run_step "Install RKE2" \
   "${SCRIPTS_DIR}/04-install-rke2.sh" --role "${ROLE}"
 
-run_step "05 · Prepare node" \
+run_step "Prepare node" \
   "${SCRIPTS_DIR}/05-prepare-node.sh" --role "${ROLE}" --config "${CONFIG_FILE}" --artifacts "${ARTIFACTS_DIR}" --images "${SCRIPT_DIR}/images"
 
-run_step "06 · Start RKE2" \
+run_step "Start RKE2" \
   "${SCRIPTS_DIR}/06-start-rke2.sh" --role "${ROLE}"
 
 echo ""

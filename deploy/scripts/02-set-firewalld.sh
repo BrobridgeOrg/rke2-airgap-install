@@ -101,7 +101,7 @@ sudo firewall-cmd --reload
 
 echo ""
 echo "Done."
-echo "Next step: (optional) apply CIS hardening — requires reboot before proceeding"
+echo "Next step: (optional) apply CIS hardening"
 echo "  ./03-set-cis-optional.sh --role server"
 echo "Otherwise, proceed to install RKE2"
 echo "  ./04-install-rke2.sh --role server"

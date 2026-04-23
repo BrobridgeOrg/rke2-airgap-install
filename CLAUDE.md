@@ -97,4 +97,5 @@ cmd/
 | `DISABLE_KUBE_PROXY` | — | `false` (default); recommended with Cilium |
 | `TLS_SANS` | — | Extra SANs appended to NODE_NAME and NODE_IP |
 | `RANCHER_PRIME` | — | `false` (default); sets `system-default-registry: registry.rancher.com` |
+| `TIMEZONE` | — | `Asia/Taipei` (default); timezone for kube component extra-env |
 | `LINUX_MAJOR` | — | RHEL major version, default `9` |

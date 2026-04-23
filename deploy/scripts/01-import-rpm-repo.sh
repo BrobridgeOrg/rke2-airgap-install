@@ -50,6 +50,7 @@ name=RKE2 Local Offline Repo
 baseurl=file://${REPO_DIR}
 enabled=1
 gpgcheck=0
+# gpgcheck disabled: packages come from a controlled local bundle
 EOF
 
 echo ""

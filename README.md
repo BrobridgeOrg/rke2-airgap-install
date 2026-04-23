@@ -91,6 +91,7 @@ All options are set in `config.env` (copied from `config.env.example`):
 | `DISABLE_CLOUD_CONTROLLER` | | `false` | Disable built-in cloud controller |
 | `DISABLE_KUBE_PROXY` | | `false` | Disable kube-proxy (recommended with Cilium) |
 | `RANCHER_PRIME` | | `false` | Set `system-default-registry` to `registry.rancher.com` |
+| `TIMEZONE` | | `Asia/Taipei` | Timezone injected into kube component env vars |
 | `LINUX_MAJOR` | | `9` | RHEL major version (RPM repo) |
 
 ## Multi-node Setup

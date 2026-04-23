@@ -94,7 +94,7 @@ case "$INGRESS" in
 esac
 
 echo ""
-echo "[3] Verifying checksums"
+echo "[2] Verifying checksums"
 cd "${DEST_DIR}"
 
 for f in rke2-images-core.linux-${ARCH}.tar.zst \

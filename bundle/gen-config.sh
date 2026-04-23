@@ -16,6 +16,7 @@ SCHEDULABLE=true
 DISABLE_CLOUD_CONTROLLER=false
 DISABLE_KUBE_PROXY=false
 RANCHER_PRIME=false
+TIMEZONE="Asia/Taipei"
 OUT_FILE="./config.yaml"
 
 # Usage
@@ -40,6 +41,7 @@ Options:
       --disable-cloud-controller  Disable built-in cloud controller manager
       --disable-kube-proxy        Disable kube-proxy (e.g. when using Cilium)
       --rancher-prime               Use Rancher Prime registry (registry.rancher.com)
+      --timezone    Timezone for kube component env  (default: ${TIMEZONE})
   -d, --dest        Output file path  (default: ${OUT_FILE})
   -h, --help        Show this help
 
@@ -67,6 +69,7 @@ while [[ $# -gt 0 ]]; do
        --disable-cloud-controller) DISABLE_CLOUD_CONTROLLER=true;        shift ;;
        --disable-kube-proxy)       DISABLE_KUBE_PROXY=true; shift ;;
        --rancher-prime)            RANCHER_PRIME=true;    shift ;;
+       --timezone)                 TIMEZONE="$2";        shift 2 ;;
     -d|--dest)        OUT_FILE="$2";    shift 2 ;;
     -h|--help)        usage ;;
     *) echo "Unknown option: $1"; usage ;;
@@ -105,14 +108,10 @@ TLS_SANS="${NODE_NAME} ${NODE_IP}${TLS_SANS:+ ${TLS_SANS}}"
 mkdir -p "$(dirname "${OUT_FILE}")"
 
 {
-  # General
-  echo "debug: false"
-
   if [[ "${ROLE}" == "server" ]]; then
     echo 'write-kubeconfig-mode: "0644"'
+    echo ""
   fi
-
-  echo ""
 
   # Node
   echo "node-name: ${NODE_NAME}"
@@ -150,6 +149,10 @@ mkdir -p "$(dirname "${OUT_FILE}")"
     echo '  - "service-account-extend-token-expiration=false"'
   fi
 
+  if [[ "${RANCHER_PRIME}" == true ]]; then
+    echo "system-default-registry: registry.rancher.com"
+  fi
+
   if [[ "${ROLE}" == "server" ]]; then
     echo ""
 
@@ -184,17 +187,10 @@ mkdir -p "$(dirname "${OUT_FILE}")"
 
     echo ""
 
-    # Air-gap
-    if [[ "${RANCHER_PRIME}" == true ]]; then
-      echo "system-default-registry: registry.rancher.com"
-    fi
-
-    echo ""
-
     # Component timezone
     for component in etcd kube-apiserver kube-controller-manager kube-scheduler cloud-controller-manager; do
       echo "${component}-extra-env:"
-      echo '  - "TZ=Asia/Taipei"'
+      echo "  - \"TZ=${TIMEZONE}\""
     done
   fi
 } > "${OUT_FILE}"
@@ -206,6 +202,7 @@ echo "Node IP: ${NODE_IP}"
 echo "TLS SANs: ${TLS_SANS}"
 echo "CNI: ${CNI}"
 echo "Ingress: ${INGRESS}"
+echo "Timezone: ${TIMEZONE}"
 [[ "${RANCHER_PRIME}" == true ]] && echo "Rancher Prime: yes (registry.rancher.com)"
 echo ""
 echo "Config written to: ${OUT_FILE}"
