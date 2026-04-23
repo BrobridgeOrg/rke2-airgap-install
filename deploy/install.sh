@@ -176,10 +176,10 @@ if [[ "${CIS}" == "true" ]]; then
 fi
 
 run_step "04 · Install RKE2" \
-  "${SCRIPTS_DIR}/04-install-rke2.sh" --role "${ROLE}" --artifacts "${ARTIFACTS_DIR}"
+  "${SCRIPTS_DIR}/04-install-rke2.sh" --role "${ROLE}"
 
 run_step "05 · Prepare node" \
-  "${SCRIPTS_DIR}/05-prepare-node.sh" --role "${ROLE}" --config "${CONFIG_FILE}" --images "${SCRIPT_DIR}/images"
+  "${SCRIPTS_DIR}/05-prepare-node.sh" --role "${ROLE}" --config "${CONFIG_FILE}" --artifacts "${ARTIFACTS_DIR}" --images "${SCRIPT_DIR}/images"
 
 run_step "06 · Start RKE2" \
   "${SCRIPTS_DIR}/06-start-rke2.sh" --role "${ROLE}"

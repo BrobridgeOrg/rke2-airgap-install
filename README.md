@@ -12,6 +12,7 @@ Bash scripts and Makefiles for installing [RKE2](https://docs.rke2.io/) in air-g
 
 **Air-gap machine** (deployment):
 - RHEL
+- `dnf`
 - `firewalld`
 - `systemd`
 
@@ -89,7 +90,7 @@ All options are set in `config.env` (copied from `config.env.example`):
 | `SCHEDULABLE` | | `true` | `false`: add `CriticalAddonsOnly=true:NoExecute` taint (dedicated control plane) |
 | `DISABLE_CLOUD_CONTROLLER` | | `false` | Disable built-in cloud controller |
 | `DISABLE_KUBE_PROXY` | | `false` | Disable kube-proxy (recommended with Cilium) |
-| `REGISTRY` | | — | Private registry hostname for air-gap |
+| `RANCHER_PRIME` | | `false` | Set `system-default-registry` to `registry.rancher.com` |
 | `LINUX_MAJOR` | | `9` | RHEL major version (RPM repo) |
 
 ## Multi-node Setup

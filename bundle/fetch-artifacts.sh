@@ -63,11 +63,8 @@ echo "RKE2 ${RKE2_VERSION} | CNI: ${CNI} | INGRESS: ${INGRESS} | ARCH: ${ARCH}"
 echo "Source: ${BASE_URL}"
 echo ""
 
-echo "[1] Core artifacts"
+echo "[1] Checksums and image tarballs"
 download "sha256sum-${ARCH}.txt"
-download "rke2.linux-${ARCH}.tar.gz"
-
-echo "[2] Image tarballs"
 download "rke2-images-core.linux-${ARCH}.tar.zst"
 
 case "$CNI" in
@@ -100,8 +97,7 @@ echo ""
 echo "[3] Verifying checksums"
 cd "${DEST_DIR}"
 
-for f in rke2.linux-${ARCH}.tar.gz \
-          rke2-images-core.linux-${ARCH}.tar.zst \
+for f in rke2-images-core.linux-${ARCH}.tar.zst \
           rke2-images-${CNI}.linux-${ARCH}.tar.zst \
           rke2-images-traefik.linux-${ARCH}.tar.zst; do
   [[ ! -f "$f" ]] && continue

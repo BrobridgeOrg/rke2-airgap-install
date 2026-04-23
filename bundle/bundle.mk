@@ -13,12 +13,12 @@ CIS                     ?= false
 SCHEDULABLE             ?= true
 DISABLE_CLOUD_CONTROLLER ?= false
 DISABLE_KUBE_PROXY       ?= false
+RANCHER_PRIME ?= false
 TOKEN      ?=
 NODE_NAME  ?=
 NODE_IP    ?=
 SERVER_URL ?=
 TLS_SANS   ?=
-REGISTRY   ?=
 
 ARTIFACTS_DIR := $(OUT_DIR)/artifacts
 RPM_REPO_DIR  := $(OUT_DIR)/rpm-repo
@@ -27,7 +27,6 @@ BUNDLE        := rke2-airgap-$(RKE2_VERSION)-$(ARCH).tar.gz
 .PHONY: fetch rpm-repo config prepare bundle clean
 
 fetch:
-	./bundle/fetch-install.sh --dest $(ARTIFACTS_DIR)
 	./bundle/fetch-artifacts.sh --version $(RKE2_VERSION) --arch $(ARCH) --cni $(CNI) --ingress $(INGRESS) --dest $(ARTIFACTS_DIR) \
 		$(if $(ARTIFACTS_BASE_URL),--url $(ARTIFACTS_BASE_URL),)
 
@@ -52,7 +51,7 @@ config:
 		$(if $(filter false,$(SCHEDULABLE)),--no-schedule,) \
 		$(if $(filter true,$(DISABLE_CLOUD_CONTROLLER)),--disable-cloud-controller,) \
 		$(if $(filter true,$(DISABLE_KUBE_PROXY)),--disable-kube-proxy,) \
-		$(if $(REGISTRY),--registry $(REGISTRY),)
+		$(if $(filter true,$(RANCHER_PRIME)),--rancher-prime,)
 
 prepare: fetch rpm-repo config
 	cp -r deploy/. $(OUT_DIR)/

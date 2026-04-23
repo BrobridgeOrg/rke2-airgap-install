@@ -96,5 +96,5 @@ cmd/
 | `DISABLE_CLOUD_CONTROLLER` | — | `false` (default) |
 | `DISABLE_KUBE_PROXY` | — | `false` (default); recommended with Cilium |
 | `TLS_SANS` | — | Extra SANs appended to NODE_NAME and NODE_IP |
-| `REGISTRY` | — | Private registry hostname for air-gap |
+| `RANCHER_PRIME` | — | `false` (default); sets `system-default-registry: registry.rancher.com` |
 | `LINUX_MAJOR` | — | RHEL major version, default `9` |

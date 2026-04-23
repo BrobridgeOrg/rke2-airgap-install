@@ -15,7 +15,7 @@ CIS=false
 SCHEDULABLE=true
 DISABLE_CLOUD_CONTROLLER=false
 DISABLE_KUBE_PROXY=false
-REGISTRY=""
+RANCHER_PRIME=false
 OUT_FILE="./config.yaml"
 
 # Usage
@@ -39,7 +39,7 @@ Options:
       --no-schedule             Add CriticalAddonsOnly=true:NoExecute taint (dedicated control plane)
       --disable-cloud-controller  Disable built-in cloud controller manager
       --disable-kube-proxy        Disable kube-proxy (e.g. when using Cilium)
-      --registry    Private registry for air-gap (e.g. registry.example.com)
+      --rancher-prime               Use Rancher Prime registry (registry.rancher.com)
   -d, --dest        Output file path  (default: ${OUT_FILE})
   -h, --help        Show this help
 
@@ -64,9 +64,9 @@ while [[ $# -gt 0 ]]; do
     -i|--ingress)     INGRESS="$2";     shift 2 ;;
        --cis)                      CIS=true;          shift ;;
        --no-schedule)              SCHEDULABLE=false; shift ;;
-       --disable-cloud-controller) DISABLE_CLOUD_CONTROLLER=true; shift ;;
-       --disable-kube-proxy)       DISABLE_KUBE_PROXY=true;       shift ;;
-       --registry)                 REGISTRY="$2";                 shift 2 ;;
+       --disable-cloud-controller) DISABLE_CLOUD_CONTROLLER=true;        shift ;;
+       --disable-kube-proxy)       DISABLE_KUBE_PROXY=true; shift ;;
+       --rancher-prime)            RANCHER_PRIME=true;    shift ;;
     -d|--dest)        OUT_FILE="$2";    shift 2 ;;
     -h|--help)        usage ;;
     *) echo "Unknown option: $1"; usage ;;
@@ -185,8 +185,8 @@ mkdir -p "$(dirname "${OUT_FILE}")"
     echo ""
 
     # Air-gap
-    if [[ -n "${REGISTRY}" ]]; then
-      echo "system-default-registry: ${REGISTRY}"
+    if [[ "${RANCHER_PRIME}" == true ]]; then
+      echo "system-default-registry: registry.rancher.com"
     fi
 
     echo ""
@@ -206,6 +206,6 @@ echo "Node IP: ${NODE_IP}"
 echo "TLS SANs: ${TLS_SANS}"
 echo "CNI: ${CNI}"
 echo "Ingress: ${INGRESS}"
-[[ -n "${REGISTRY}" ]]   && echo "Registry: ${REGISTRY}"
+[[ "${RANCHER_PRIME}" == true ]] && echo "Rancher Prime: yes (registry.rancher.com)"
 echo ""
 echo "Config written to: ${OUT_FILE}"

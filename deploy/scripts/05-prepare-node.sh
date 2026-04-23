@@ -8,6 +8,7 @@ CONFIG_SRC="./config.yaml"
 CONFIG_DEST="/etc/rancher/rke2/config.yaml"
 REGISTRIES_SRC="./registries.yaml"
 REGISTRIES_DEST="/etc/rancher/rke2/registries.yaml"
+ARTIFACTS_SRC="./artifacts"
 IMAGES_SRC="./images"
 IMAGES_DEST="/var/lib/rancher/rke2/agent/images"
 
@@ -16,13 +17,14 @@ usage() {
   cat <<EOF
 Usage: $(basename "$0") [options]
 
-Places config files and pre-loads extra images before starting RKE2.
+Places config files and pre-loads images before starting RKE2.
 
 Options:
-  -r, --role    Node role: server | agent  (default: ${ROLE})
-  -c, --config  Path to config.yaml  (default: ${CONFIG_SRC})
-  -i, --images  Path to extra images directory  (default: ${IMAGES_SRC})
-  -h, --help    Show this help
+  -r, --role       Node role: server | agent  (default: ${ROLE})
+  -c, --config     Path to config.yaml  (default: ${CONFIG_SRC})
+  -a, --artifacts  Path to artifacts directory  (default: ${ARTIFACTS_SRC})
+  -i, --images     Path to extra images directory  (default: ${IMAGES_SRC})
+  -h, --help       Show this help
 
 Examples:
   $(basename "$0") --role server
@@ -34,10 +36,11 @@ EOF
 # Parse arguments
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    -r|--role)   ROLE="$2";       shift 2 ;;
-    -c|--config) CONFIG_SRC="$2"; shift 2 ;;
-    -i|--images) IMAGES_SRC="$2"; shift 2 ;;
-    -h|--help)   usage ;;
+    -r|--role)       ROLE="$2";          shift 2 ;;
+    -c|--config)     CONFIG_SRC="$2";    shift 2 ;;
+    -a|--artifacts)  ARTIFACTS_SRC="$2"; shift 2 ;;
+    -i|--images)     IMAGES_SRC="$2";    shift 2 ;;
+    -h|--help)       usage ;;
     *) echo "Unknown option: $1"; usage ;;
   esac
 done
@@ -66,14 +69,29 @@ if [[ -f "${REGISTRIES_SRC}" ]]; then
   echo "  -> ${REGISTRIES_DEST}"
 fi
 
-echo "[2] Pre-loading extra images"
+echo "[2] Copying RKE2 image tarballs"
 shopt -s nullglob
-files=("${IMAGES_SRC}"/*.tar "${IMAGES_SRC}"/*.tar.gz "${IMAGES_SRC}"/*.tar.zst)
+artifact_files=("${ARTIFACTS_SRC}"/*.tar.zst "${ARTIFACTS_SRC}"/*.tar.gz "${ARTIFACTS_SRC}"/*.tar)
 shopt -u nullglob
 
-if [[ ${#files[@]} -gt 0 ]]; then
+if [[ ${#artifact_files[@]} -gt 0 ]]; then
   sudo mkdir -p "${IMAGES_DEST}"
-  for f in "${files[@]}"; do
+  for f in "${artifact_files[@]}"; do
+    echo "  -> $(basename "${f}")"
+    sudo cp "${f}" "${IMAGES_DEST}/"
+  done
+else
+  echo "  (no image tarballs found in ${ARTIFACTS_SRC}, skipping)"
+fi
+
+echo "[3] Pre-loading extra images"
+shopt -s nullglob
+extra_files=("${IMAGES_SRC}"/*.tar "${IMAGES_SRC}"/*.tar.gz "${IMAGES_SRC}"/*.tar.zst)
+shopt -u nullglob
+
+if [[ ${#extra_files[@]} -gt 0 ]]; then
+  sudo mkdir -p "${IMAGES_DEST}"
+  for f in "${extra_files[@]}"; do
     echo "  -> $(basename "${f}")"
     sudo cp "${f}" "${IMAGES_DEST}/"
   done
