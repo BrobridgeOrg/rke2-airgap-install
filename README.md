@@ -33,6 +33,17 @@ make prepare TARGET_OS=ubuntu  # skip RPM repo for Ubuntu target machines
 make bundle               # package everything into rke2-airgap-<version>-<arch>.tar.gz
 ```
 
+#### Private registry (optional)
+
+To configure a private registry mirror, place a `registries.yaml` in `output/` before running `make bundle`:
+
+```
+output/
+  registries.yaml
+```
+
+During installation, `05-prepare-node.sh` copies it to `/etc/rancher/rke2/registries.yaml`. If the file is absent, the step is skipped. See the [RKE2 registry docs](https://docs.rke2.io/install/containerd_registry_configuration) for the file format.
+
 #### Extra images (optional)
 
 To pre-load additional image tarballs (`.tar`, `.tar.gz`, `.tar.zst`) before RKE2 starts, place them in `output/images/` before running `make bundle`:
