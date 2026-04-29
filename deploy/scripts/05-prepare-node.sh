@@ -71,7 +71,7 @@ fi
 
 echo "[2] Copying RKE2 image tarballs"
 shopt -s nullglob
-artifact_files=("${ARTIFACTS_SRC}"/*.tar.zst "${ARTIFACTS_SRC}"/*.tar.gz "${ARTIFACTS_SRC}"/*.tar)
+artifact_files=("${ARTIFACTS_SRC}"/rke2-images-*.tar.zst)
 shopt -u nullglob
 
 if [[ ${#artifact_files[@]} -gt 0 ]]; then

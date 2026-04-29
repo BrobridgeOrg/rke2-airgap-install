@@ -7,6 +7,7 @@ RKE2_VERSION="v1.35.3+rke2r1"
 ARCH="amd64"
 CNI="canal"
 INGRESS="traefik"
+TARGET_OS="rhel"
 DEST_DIR="./artifacts"
 BASE_URL="https://github.com/rancher/rke2/releases/download"
 
@@ -16,17 +17,18 @@ usage() {
 Usage: $(basename "$0") [options]
 
 Options:
-  -v, --version   RKE2 version  (default: ${RKE2_VERSION})
-  -a, --arch      Architecture  (default: ${ARCH})
-  -c, --cni       CNI type: canal | cilium | calico | none  (default: ${CNI})
-  -i, --ingress   Ingress controller: nginx | traefik | none  (default: ${INGRESS})
-  -d, --dest      Download destination path  (default: ${DEST_DIR})
-  -u, --url       Source URL prefix  (default: ${BASE_URL})
-  -h, --help      Show this help
+  -v, --version     RKE2 version  (default: ${RKE2_VERSION})
+  -a, --arch        Architecture  (default: ${ARCH})
+  -c, --cni         CNI type: canal | cilium | calico | none  (default: ${CNI})
+  -i, --ingress     Ingress controller: nginx | traefik | none  (default: ${INGRESS})
+  -t, --target-os   Target OS: rhel | ubuntu  (default: ${TARGET_OS})
+  -d, --dest        Download destination path  (default: ${DEST_DIR})
+  -u, --url         Source URL prefix  (default: ${BASE_URL})
+  -h, --help        Show this help
 
 Examples:
   $(basename "$0") --version v1.35.3+rke2r1 --cni cilium
-  $(basename "$0") --version v1.35.3+rke2r1 --ingress traefik
+  $(basename "$0") --version v1.35.3+rke2r1 --ingress nginx --target-os ubuntu
   $(basename "$0") --url https://prime.repo.rancher.com/artifacts/rke2 --version v1.35.3+rke2r1
 EOF
   exit 0
@@ -35,13 +37,14 @@ EOF
 # Parse arguments
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    -v|--version) RKE2_VERSION="$2"; shift 2 ;;
-    -a|--arch)    ARCH="$2";         shift 2 ;;
-    -c|--cni)     CNI="$2";          shift 2 ;;
-    -i|--ingress) INGRESS="$2";      shift 2 ;;
-    -d|--dest)    DEST_DIR="$2";     shift 2 ;;
-    -u|--url)     BASE_URL="$2";     shift 2 ;;
-    -h|--help)    usage ;;
+    -v|--version)   RKE2_VERSION="$2"; shift 2 ;;
+    -a|--arch)      ARCH="$2";         shift 2 ;;
+    -c|--cni)       CNI="$2";          shift 2 ;;
+    -i|--ingress)   INGRESS="$2";      shift 2 ;;
+    -t|--target-os) TARGET_OS="$2";    shift 2 ;;
+    -d|--dest)      DEST_DIR="$2";     shift 2 ;;
+    -u|--url)       BASE_URL="$2";     shift 2 ;;
+    -h|--help)      usage ;;
     *) echo "Unknown option: $1"; usage ;;
   esac
 done
@@ -59,15 +62,21 @@ download() {
     -o "${DEST_DIR}/${file}"
 }
 
-echo "RKE2 ${RKE2_VERSION} | CNI: ${CNI} | INGRESS: ${INGRESS} | ARCH: ${ARCH}"
+echo "RKE2 ${RKE2_VERSION} | CNI: ${CNI} | INGRESS: ${INGRESS} | ARCH: ${ARCH} | OS: ${TARGET_OS}"
 echo "Source: ${BASE_URL}"
 echo ""
 
-echo "[1] Checksums and image tarballs"
+echo "[1] Downloading artifacts"
 download "sha256sum-${ARCH}.txt"
+
+# Binary tarball is only needed for script-based install (Ubuntu/Debian)
+if [[ "${TARGET_OS}" != "rhel" ]]; then
+  download "rke2.linux-${ARCH}.tar.gz"
+fi
+
 download "rke2-images-core.linux-${ARCH}.tar.zst"
 
-case "$CNI" in
+case "${CNI}" in
   canal|cilium|calico)
     download "rke2-images-${CNI}.linux-${ARCH}.tar.zst"
     ;;
@@ -80,12 +89,15 @@ case "$CNI" in
     ;;
 esac
 
-case "$INGRESS" in
+case "${INGRESS}" in
   traefik)
     download "rke2-images-traefik.linux-${ARCH}.tar.zst"
     ;;
-  nginx|none)
-    echo "  -> INGRESS=${INGRESS}, skipping traefik tarball"
+  nginx)
+    download "rke2-images-ingress-nginx.linux-${ARCH}.tar.zst"
+    ;;
+  none)
+    echo "  -> INGRESS=none, skipping ingress tarball"
     ;;
   *)
     echo "Error: unsupported ingress: ${INGRESS}"
@@ -97,19 +109,20 @@ echo ""
 echo "[2] Verifying checksums"
 cd "${DEST_DIR}"
 
-for f in rke2-images-core.linux-${ARCH}.tar.zst \
-          rke2-images-${CNI}.linux-${ARCH}.tar.zst \
-          rke2-images-traefik.linux-${ARCH}.tar.zst; do
-  [[ ! -f "$f" ]] && continue
-  expected=$(grep "$f" "sha256sum-${ARCH}.txt" | awk '{print $1}')
-  actual=$(sha256sum "$f" | awk '{print $1}')
-  if [[ "$expected" == "$actual" ]]; then
-    echo "  OK $f"
+while IFS= read -r line; do
+  [[ -z "${line}" ]] && continue
+  expected="${line%% *}"
+  filename="${line##* }"
+  filename="${filename#\*}"  # strip binary-mode marker (*) if present
+  [[ ! -f "${filename}" ]] && continue
+  actual=$(sha256sum "${filename}" | awk '{print $1}')
+  if [[ "${expected}" == "${actual}" ]]; then
+    echo "  OK ${filename}"
   else
-    echo "  FAIL $f checksum mismatch"
+    echo "  FAIL ${filename}: checksum mismatch"
     exit 1
   fi
-done
+done < "sha256sum-${ARCH}.txt"
 
 echo ""
 echo "Done. Artifacts saved to ${DEST_DIR}"

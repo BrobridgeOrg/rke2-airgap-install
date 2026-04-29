@@ -48,6 +48,12 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+# ── OS detection ──────────────────────────────────────────────────────────────
+
+# shellcheck source=scripts/lib/os-detect.sh
+source "${SCRIPT_DIR}/scripts/lib/os-detect.sh"
+OS_FAMILY="$(detect_os_family)"
+
 # ── helpers ───────────────────────────────────────────────────────────────────
 
 print_header() {
@@ -154,6 +160,7 @@ echo ""
 echo "┌─────────────────────────────────────┐"
 echo "│ Installation summary                │"
 echo "├─────────────────────────────────────┤"
+printf "│  %-10s  %-22s │\n" "OS:"     "${OS_FAMILY}"
 printf "│  %-10s  %-22s │\n" "Role:"   "${ROLE}"
 printf "│  %-10s  %-22s │\n" "CNI:"    "${CNI}"
 printf "│  %-10s  %-22s │\n" "CIS:"    "${CIS}"
@@ -164,8 +171,10 @@ read -r -p "Press Enter to begin, or Ctrl+C to cancel..."
 
 # ── run scripts ───────────────────────────────────────────────────────────────
 
-run_step "Import RPM repo" \
-  "${SCRIPTS_DIR}/01-import-rpm-repo.sh"
+if [[ "${OS_FAMILY}" == "rhel" ]]; then
+  run_step "Import RPM repo" \
+    "${SCRIPTS_DIR}/01-import-rpm-repo.sh"
+fi
 
 run_step "Configure firewall" \
   "${SCRIPTS_DIR}/02-set-firewalld.sh" --role "${ROLE}" --cni "${CNI}"
@@ -176,7 +185,7 @@ if [[ "${CIS}" == "true" ]]; then
 fi
 
 run_step "Install RKE2" \
-  "${SCRIPTS_DIR}/04-install-rke2.sh" --role "${ROLE}"
+  "${SCRIPTS_DIR}/04-install-rke2.sh" --role "${ROLE}" --artifacts "${ARTIFACTS_DIR}"
 
 run_step "Prepare node" \
   "${SCRIPTS_DIR}/05-prepare-node.sh" --role "${ROLE}" --config "${CONFIG_FILE}" --artifacts "${ARTIFACTS_DIR}" --images "${SCRIPT_DIR}/images"

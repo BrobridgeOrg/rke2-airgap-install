@@ -1,6 +1,6 @@
 # RKE2 Air-Gap install
 
-Bash scripts and Makefiles for installing [RKE2](https://docs.rke2.io/) in air-gapped (offline) environments on RHEL.
+Bash scripts and Makefiles for installing [RKE2](https://docs.rke2.io/) in air-gapped (offline) environments on RHEL and Ubuntu.
 
 ## Requirements
 
@@ -8,12 +8,12 @@ Bash scripts and Makefiles for installing [RKE2](https://docs.rke2.io/) in air-g
 - `git`, `make`
 - `curl`
 - `vim` (or any text editor, for editing `config.env`)
-- `createrepo_c`, `dnf-plugins-core` (RPM repo sync, RHEL only)
+- `createrepo_c`, `dnf-plugins-core` (RPM repo sync, RHEL bundles only)
 
 **Air-gap machine** (deployment):
-- RHEL
-- `dnf`
-- `firewalld`
+- RHEL / CentOS / Rocky / AlmaLinux — or — Ubuntu / Debian
+- `dnf` (RHEL) or `bash` (Ubuntu, uses bundled `install.sh`)
+- `firewalld` (RHEL); `ufw` or manual rules for Ubuntu
 - `systemd`
 
 ## Quick Start
@@ -28,8 +28,9 @@ cp config.env.example config.env
 ### 2. Prepare bundle (online machine)
 
 ```bash
-make prepare    # fetch artifacts, sync RPM repo, generate config
-make bundle     # package everything into rke2-airgap-<version>-<arch>.tar.gz
+make prepare              # fetch artifacts, sync RPM repo (RHEL), generate config
+make prepare TARGET_OS=ubuntu  # skip RPM repo for Ubuntu target machines
+make bundle               # package everything into rke2-airgap-<version>-<arch>.tar.gz
 ```
 
 #### Extra images (optional)
@@ -78,6 +79,7 @@ All options are set in `config.env` (copied from `config.env.example`):
 |----------|----------|---------|-------------|
 | `RKE2_VERSION` | | `v1.35.3+rke2r1` | RKE2 version to install |
 | `ARCH` | | `amd64` | Architecture (`amd64` \| `arm64`) |
+| `TARGET_OS` | | `rhel` | Target OS family (`rhel` \| `ubuntu`) |
 | `TOKEN` | yes | — | Shared cluster secret |
 | `NODE_NAME` | yes | — | Node hostname |
 | `NODE_IP` | yes | — | Node IP address |

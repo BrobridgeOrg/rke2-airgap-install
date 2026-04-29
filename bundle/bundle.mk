@@ -3,6 +3,7 @@ ARCH               ?= amd64
 CNI                ?= canal
 INGRESS            ?= traefik
 ARTIFACTS_BASE_URL ?=
+TARGET_OS     ?= rhel  # rhel | ubuntu
 RKE2_MINOR    := $(shell echo $(RKE2_VERSION) | sed 's/v1\.\([0-9]*\)\..*/\1/')
 LINUX_MAJOR   ?= 9
 OUT_DIR       ?= output
@@ -25,10 +26,17 @@ ARTIFACTS_DIR := $(OUT_DIR)/artifacts
 RPM_REPO_DIR  := $(OUT_DIR)/rpm-repo
 BUNDLE        := rke2-airgap-$(RKE2_VERSION)-$(ARCH).tar.gz
 
+_PREPARE_DEPS := fetch config
+ifneq ($(TARGET_OS),ubuntu)
+_PREPARE_DEPS += rpm-repo
+endif
+
 .PHONY: fetch rpm-repo config prepare bundle clean
 
 fetch:
-	./bundle/fetch-artifacts.sh --version $(RKE2_VERSION) --arch $(ARCH) --cni $(CNI) --ingress $(INGRESS) --dest $(ARTIFACTS_DIR) \
+	@if [ "$(TARGET_OS)" != "rhel" ]; then ./bundle/fetch-install.sh --dest $(ARTIFACTS_DIR); fi
+	./bundle/fetch-artifacts.sh --version $(RKE2_VERSION) --arch $(ARCH) --cni $(CNI) --ingress $(INGRESS) \
+		--target-os $(TARGET_OS) --dest $(ARTIFACTS_DIR) \
 		$(if $(ARTIFACTS_BASE_URL),--url $(ARTIFACTS_BASE_URL),)
 
 rpm-repo:
@@ -55,7 +63,7 @@ config:
 		$(if $(filter true,$(RANCHER_PRIME)),--rancher-prime,) \
 		$(if $(TIMEZONE),--timezone "$(TIMEZONE)",)
 
-prepare: fetch rpm-repo config
+prepare: $(_PREPARE_DEPS)
 	cp -r deploy/. $(OUT_DIR)/
 	echo "$(RKE2_VERSION)" > $(OUT_DIR)/rke2-version.txt
 	@echo ""

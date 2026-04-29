@@ -2,6 +2,11 @@
 
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# shellcheck source=lib/os-detect.sh
+source "${SCRIPT_DIR}/lib/os-detect.sh"
+
 # Defaults
 ROLE="all"
 CNI="canal"
@@ -60,7 +65,7 @@ case "${ROLE}" in
 esac
 
 # Resolve CNI ports and interfaces
-# Note: Cilium also requires ICMP echo-request (type 8), which firewalld allows by default
+# Note: Cilium also requires ICMP echo-request (type 8), which most firewalls allow by default
 case "${CNI}" in
   canal)  PORTS="${PORTS} ${CANAL_PORTS}"; IFACES="${CANAL_IFACES}" ;;
   cilium) PORTS="${PORTS} ${CILIUM_PORTS}"; IFACES="${CILIUM_IFACES}" ;;
@@ -76,28 +81,74 @@ fi
 # Deduplicate ports
 PORTS=$(echo "${PORTS}" | tr ' ' '\n' | sort -u | tr '\n' ' ')
 
+OS_FAMILY="$(detect_os_family)"
+
 # main
-echo "Role: ${ROLE} | CNI: ${CNI}"
+echo "Role: ${ROLE} | CNI: ${CNI} | OS: ${OS_FAMILY:-unknown}"
 echo "Ports: ${PORTS}"
 [[ -n "${IFACES}" ]] && echo "Trusted interfaces: ${IFACES}"
 echo ""
 
-echo "[1] Opening firewall ports"
-for port in ${PORTS}; do
-  sudo firewall-cmd --permanent --add-port="${port}"
-  echo "  -> ${port}"
-done
+case "${OS_FAMILY}" in
+  rhel)
+    if ! systemctl is-active firewalld &>/dev/null; then
+      echo "firewalld is not active; skipping firewall configuration"
+      exit 0
+    fi
 
-if [[ -n "${IFACES}" ]]; then
-  echo "[2] Adding CNI interfaces to trusted zone"
-  for iface in ${IFACES}; do
-    sudo firewall-cmd --permanent --zone=trusted --add-interface="${iface}"
-    echo "  -> ${iface}"
-  done
-fi
+    STEP=1
+    echo "[${STEP}] Opening firewall ports (firewalld)"; (( STEP++ ))
+    for port in ${PORTS}; do
+      sudo firewall-cmd --permanent --add-port="${port}"
+      echo "  -> ${port}"
+    done
 
-echo "[3] Reloading firewall"
-sudo firewall-cmd --reload
+    if [[ -n "${IFACES}" ]]; then
+      echo "[${STEP}] Adding CNI interfaces to trusted zone"; (( STEP++ ))
+      for iface in ${IFACES}; do
+        sudo firewall-cmd --permanent --zone=trusted --add-interface="${iface}"
+        echo "  -> ${iface}"
+      done
+    fi
+
+    echo "[${STEP}] Reloading firewall"
+    sudo firewall-cmd --reload
+    ;;
+
+  debian)
+    if ! sudo ufw status | grep -q "Status: active"; then
+      echo "ufw is not active; skipping firewall configuration"
+      exit 0
+    fi
+
+    STEP=1
+    echo "[${STEP}] Opening firewall ports (ufw)"; (( STEP++ ))
+    for port in ${PORTS}; do
+      # ufw uses colon for port ranges (e.g. 30000:32767/tcp), firewalld uses dash
+      sudo ufw allow "${port//-/:}"
+      echo "  -> ${port}"
+    done
+
+    if [[ -n "${IFACES}" ]]; then
+      echo "[${STEP}] Allowing CNI interfaces"
+      for iface in ${IFACES}; do
+        if [[ "${iface}" == *"+"* ]]; then
+          # ufw does not support wildcard interface names
+          echo "  -- ${iface}: wildcard interfaces not supported by ufw; configure manually"
+        else
+          sudo ufw allow in on "${iface}"
+          echo "  -> ${iface}"
+        fi
+      done
+    fi
+    ;;
+
+  *)
+    echo "Unknown OS; skipping firewall configuration"
+    echo "Please open the required ports manually: ${PORTS}"
+    exit 0
+    ;;
+esac
 
 echo ""
 echo "Done."

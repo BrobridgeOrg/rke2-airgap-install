@@ -23,7 +23,7 @@ deploy/                    ← air-gap machine: interactive installer and script
     01-import-rpm-repo.sh    ← registers local RPM repo for offline install
     02-set-firewalld.sh      ← opens required firewall ports and CNI interfaces
     03-set-cis-optional.sh   ← applies CIS kernel hardening (optional)
-    04-install-rke2.sh       ← runs install.sh with artifact path and role
+    04-install-rke2.sh       ← installs RKE2: DNF on RHEL, install.sh on Ubuntu
     05-prepare-node.sh       ← copies config files and pre-loads extra images
     06-start-rke2.sh         ← starts rke2 systemd service
   cmd/                     ← wrapper scripts for kubectl, crictl, ctr
@@ -63,8 +63,8 @@ make bundle
 After `make prepare`, `output/` contains:
 
 ```
-artifacts/          ← image tarballs + install.sh
-rpm-repo/           ← RPM packages + repodata
+artifacts/          ← install.sh + binary tarball + image tarballs
+rpm-repo/           ← RPM packages + repodata (RHEL only)
 images/             ← (optional) extra image tarballs to pre-load
 config.yaml         ← generated RKE2 config
 install.sh
@@ -73,7 +73,7 @@ scripts/
   02-set-firewalld.sh
   03-set-cis-optional.sh
   04-install-rke2.sh
-  05-load-extra-images.sh
+  05-prepare-node.sh
   06-start-rke2.sh
 cmd/
   kubectl
@@ -98,4 +98,5 @@ cmd/
 | `TLS_SANS` | — | Extra SANs appended to NODE_NAME and NODE_IP |
 | `RANCHER_PRIME` | — | `false` (default); sets `system-default-registry: registry.rancher.com` |
 | `TIMEZONE` | — | `Asia/Taipei` (default); timezone for kube component extra-env |
+| `TARGET_OS` | — | `rhel` (default) or `ubuntu`; controls whether rpm-repo is built |
 | `LINUX_MAJOR` | — | RHEL major version, default `9` |
