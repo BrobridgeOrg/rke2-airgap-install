@@ -157,10 +157,7 @@ mkdir -p "$(dirname "${OUT_FILE}")"
     echo ""
 
     # Networking
-    if [[ "${CNI}" != "none" ]]; then
-      echo "cni:"
-      echo "  - ${CNI}"
-    fi
+    echo "cni: ${CNI}"
 
     if [[ "${INGRESS}" == "traefik" ]]; then
       echo "ingress-controller: traefik"
