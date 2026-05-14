@@ -161,17 +161,16 @@ if [[ ! -f "${CONFIG_FILE}" ]]; then
   exit 1
 fi
 
-# ── Additional server: collect node identity and patch config ─────────────────
+# ── Collect node identity (server nodes) ──────────────────────────────────────
 
-if [[ "${NODE_ROLE}" == "server-additional" ]]; then
+if [[ "${NODE_ROLE}" == "server-init" || "${NODE_ROLE}" == "server-additional" ]]; then
   echo ""
-  echo "Additional server setup"
+  if [[ "${NODE_ROLE}" == "server-init" ]]; then
+    echo "First server setup"
+  else
+    echo "Additional server setup"
+  fi
   echo "─────────────────────────────────────────"
-
-  FIRST_SERVER_URL=""
-  while [[ -z "${FIRST_SERVER_URL}" ]]; do
-    read -r -p "First server URL (e.g. https://192.168.1.10:9345): " FIRST_SERVER_URL
-  done
 
   _auto_name=$(hostname -s 2>/dev/null || echo "")
   _auto_ip=$(ip route get 1.1.1.1 2>/dev/null | sed -n 's/.* src \([0-9.]*\).*/\1/p' | head -1)
@@ -185,24 +184,49 @@ if [[ "${NODE_ROLE}" == "server-additional" ]]; then
   [[ -z "${THIS_NODE_NAME}" ]] && echo "Error: node name is required" && exit 1
   [[ -z "${THIS_NODE_IP}" ]]   && echo "Error: node IP is required"   && exit 1
 
+  FIRST_SERVER_URL=""
+  if [[ "${NODE_ROLE}" == "server-additional" ]]; then
+    while [[ -z "${FIRST_SERVER_URL}" ]]; do
+      read -r -p "First server URL (e.g. https://192.168.1.10:9345): " FIRST_SERVER_URL
+    done
+  fi
+
   PATCHED_CONFIG="$(mktemp)"
-  awk -v name="${THIS_NODE_NAME}" -v ip="${THIS_NODE_IP}" -v url="${FIRST_SERVER_URL}" '
-    /^tls-san:/ {
-      skip_tls=1
-      print "tls-san:"
-      print "  - " name
-      print "  - " ip
-      next
-    }
-    skip_tls && /^  - / { next }
-    skip_tls && !/^  - / { skip_tls=0 }
-    /^node-name:/        { print "node-name: " name; next }
-    /^node-ip:/          { print "node-ip: "   ip;   next }
-    /^advertise-address:/ { print "advertise-address: " ip; next }
-    /^# ── Additional/  { exit }
-    { print }
-    END { print "server: " url }
-  ' "${CONFIG_FILE}" > "${PATCHED_CONFIG}"
+  if [[ "${NODE_ROLE}" == "server-init" ]]; then
+    awk -v name="${THIS_NODE_NAME}" -v ip="${THIS_NODE_IP}" '
+      /^tls-san:/ {
+        skip_tls=1
+        print "tls-san:"
+        print "  - " name
+        print "  - " ip
+        next
+      }
+      skip_tls && /^  - / { next }
+      skip_tls && !/^  - / { skip_tls=0 }
+      /^node-name:/         { print "node-name: " name; next }
+      /^node-ip:/           { print "node-ip: "   ip;   next }
+      /^advertise-address:/ { print "advertise-address: " ip; next }
+      { print }
+    ' "${CONFIG_FILE}" > "${PATCHED_CONFIG}"
+  else
+    awk -v name="${THIS_NODE_NAME}" -v ip="${THIS_NODE_IP}" -v url="${FIRST_SERVER_URL}" '
+      /^tls-san:/ {
+        skip_tls=1
+        print "tls-san:"
+        print "  - " name
+        print "  - " ip
+        next
+      }
+      skip_tls && /^  - / { next }
+      skip_tls && !/^  - / { skip_tls=0 }
+      /^node-name:/         { print "node-name: " name; next }
+      /^node-ip:/           { print "node-ip: "   ip;   next }
+      /^advertise-address:/ { print "advertise-address: " ip; next }
+      /^# ── Additional/   { exit }
+      { print }
+      END { print "server: " url }
+    ' "${CONFIG_FILE}" > "${PATCHED_CONFIG}"
+  fi
   CONFIG_FILE="${PATCHED_CONFIG}"
 fi
 

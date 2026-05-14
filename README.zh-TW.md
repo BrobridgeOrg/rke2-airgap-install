@@ -86,6 +86,13 @@ Node type:
   3) Agent
 ```
 
+選擇 Server 節點後，安裝程式會進一步詢問節點名稱與 IP，並以自動偵測的結果作為預設值：
+
+```
+Node name [my-server]:
+Node IP   [192.168.1.10]:
+```
+
 程式會根據選擇自動選用 `config-server.yaml` 或 `config-agent.yaml`，從套件與設定檔中偵測 CNI 和 CIS 設定，再依序執行安裝腳本。
 
 > **CIS 強化**：若已啟用，核心參數會立即套用。建議安裝完成後重新開機，確認設定在重啟後仍然生效。

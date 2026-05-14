@@ -83,9 +83,16 @@ The installer prompts for the node type:
 
 ```
 Node type:
-  1) Server (first node)    ← init cluster
-  2) Server (additional node) ← prompts for first server URL, patches config
+  1) Server (first node)       ← init cluster
+  2) Server (additional node)  ← prompts for first server URL, patches config
   3) Agent
+```
+
+For server nodes, the installer then prompts for node name and IP, auto-detecting both from the current machine as defaults:
+
+```
+Node name [my-server]:
+Node IP   [192.168.1.10]:
 ```
 
 It auto-selects `config-server.yaml` or `config-agent.yaml` based on the selection, detects CNI and CIS from artifacts and config, then runs the numbered scripts in order.
