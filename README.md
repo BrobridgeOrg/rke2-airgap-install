@@ -137,7 +137,6 @@ Variables marked **auto** are detected at `make prepare` time and can be overrid
 |----------|---------|-------------|
 | `CNI` | `canal` | `canal` \| `cilium` \| `calico` \| `none` |
 | `INGRESS` | `traefik` | `traefik` \| `nginx` \| `none` |
-| `SCHEDULABLE` | `true` | `false`: add `CriticalAddonsOnly=true:NoExecute` taint (dedicated control plane) |
 | `DISABLE_CLOUD_CONTROLLER` | `false` | Disable built-in cloud controller |
 | `DISABLE_KUBE_PROXY` | `false` | Disable kube-proxy (recommended with Cilium) |
 | `RANCHER_PRIME` | `false` | Set `system-default-registry` to `registry.rancher.com` |

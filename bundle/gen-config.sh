@@ -12,7 +12,6 @@ TLS_SANS=""
 CNI="canal"
 INGRESS="traefik"
 CIS=false
-SCHEDULABLE=true
 DISABLE_CLOUD_CONTROLLER=false
 DISABLE_KUBE_PROXY=false
 RANCHER_PRIME=false
@@ -34,7 +33,6 @@ Options:
   -c, --cni         CNI type: canal | cilium | calico | none  (default: ${CNI})
   -i, --ingress     Ingress controller: nginx | traefik | none  (default: ${INGRESS})
       --cis                       Enable CIS hardening profile
-      --no-schedule               Add CriticalAddonsOnly=true:NoExecute taint
       --disable-cloud-controller  Disable built-in cloud controller
       --disable-kube-proxy        Disable kube-proxy (e.g. with Cilium)
       --rancher-prime             Use Rancher Prime registry
@@ -61,7 +59,6 @@ while [[ $# -gt 0 ]]; do
     -c|--cni)         CNI="$2";         shift 2 ;;
     -i|--ingress)     INGRESS="$2";     shift 2 ;;
        --cis)                      CIS=true;                        shift ;;
-       --no-schedule)              SCHEDULABLE=false;               shift ;;
        --disable-cloud-controller) DISABLE_CLOUD_CONTROLLER=true;  shift ;;
        --disable-kube-proxy)       DISABLE_KUBE_PROXY=true;        shift ;;
        --rancher-prime)            RANCHER_PRIME=true;              shift ;;
@@ -116,10 +113,8 @@ mkdir -p "$(dirname "${OUT_FILE}")"
     for san in ${TLS_SANS}; do
       echo "  - ${san}"
     done
-    if [[ "${SCHEDULABLE}" == false ]]; then
-      echo "node-taint:"
-      echo '  - "CriticalAddonsOnly=true:NoExecute"'
-    fi
+    echo "node-taint:"
+    echo '  - "CriticalAddonsOnly=true:NoExecute"'
     echo ""
   fi
 

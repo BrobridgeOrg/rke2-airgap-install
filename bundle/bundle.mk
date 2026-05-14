@@ -14,7 +14,6 @@ OUT_DIR       ?= output
 
 # gen-config options
 CIS                      ?= false
-SCHEDULABLE              ?= true
 DISABLE_CLOUD_CONTROLLER ?= false
 DISABLE_KUBE_PROXY       ?= false
 RANCHER_PRIME            ?= false
@@ -70,7 +69,6 @@ config:
 		--node-ip   $(NODE_IP) \
 		$(if $(TLS_SANS),--tls-san "$(TLS_SANS)",) \
 		$(if $(filter true,$(CIS)),--cis,) \
-		$(if $(filter false,$(SCHEDULABLE)),--no-schedule,) \
 		$(if $(filter true,$(DISABLE_CLOUD_CONTROLLER)),--disable-cloud-controller,) \
 		$(if $(filter true,$(DISABLE_KUBE_PROXY)),--disable-kube-proxy,) \
 		$(if $(filter true,$(RANCHER_PRIME)),--rancher-prime,) \

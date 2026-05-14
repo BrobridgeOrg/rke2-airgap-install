@@ -133,7 +133,6 @@ kubectl get nodes
 |------|--------|------|
 | `CNI` | `canal` | `canal` \| `cilium` \| `calico` \| `none` |
 | `INGRESS` | `traefik` | `traefik` \| `nginx` \| `none` |
-| `SCHEDULABLE` | `true` | `false`：加上 `CriticalAddonsOnly=true:NoExecute` taint（專用控制平面） |
 | `DISABLE_CLOUD_CONTROLLER` | `false` | 停用內建 Cloud Controller |
 | `DISABLE_KUBE_PROXY` | `false` | 停用 kube-proxy（使用 Cilium 時建議開啟） |
 | `RANCHER_PRIME` | `false` | 將 `system-default-registry` 設為 `registry.rancher.com` |
