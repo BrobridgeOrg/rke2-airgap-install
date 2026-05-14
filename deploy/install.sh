@@ -174,8 +174,7 @@ if [[ "${NODE_ROLE}" == "server-additional" ]]; then
   done
 
   _auto_name=$(hostname -s 2>/dev/null || echo "")
-  _auto_ip=$(ip route get 1.1.1.1 2>/dev/null \
-    | awk '/src/{for(i=1;i<=NF;i++) if($i=="src") print $(i+1); exit}' 2>/dev/null || echo "")
+  _auto_ip=$(ip route get 1.1.1.1 2>/dev/null | sed -n 's/.* src \([0-9.]*\).*/\1/p' | head -1)
 
   read -r -p "Node name [${_auto_name}]: " input
   THIS_NODE_NAME="${input:-${_auto_name}}"

@@ -22,7 +22,7 @@ TLS_SANS                 ?=
 
 # Auto-detect node identity; override in config.env if needed
 NODE_NAME ?= $(shell hostname -s 2>/dev/null)
-NODE_IP   ?= $(shell ip route get 1.1.1.1 2>/dev/null | awk '/src/{for(i=1;i<=NF;i++) if($$i=="src") print $$(i+1); exit}')
+NODE_IP   ?= $(shell ip route get 1.1.1.1 2>/dev/null | sed -n 's/.* src \([0-9.]*\).*/\1/p' | head -1)
 
 # TOKEN: auto-generate and save to config.env if not set
 ifeq ($(strip $(TOKEN)),)
