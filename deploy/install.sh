@@ -161,85 +161,93 @@ if [[ ! -f "${CONFIG_FILE}" ]]; then
   exit 1
 fi
 
-# ── Collect node identity (server nodes) ──────────────────────────────────────
+# ── Collect node identity ─────────────────────────────────────────────────────
 
+echo ""
+case "${NODE_ROLE}" in
+  server-init)       echo "First server setup"      ;;
+  server-additional) echo "Additional server setup"  ;;
+  agent)             echo "Agent setup"              ;;
+esac
+echo "─────────────────────────────────────────"
+
+_auto_name=$(hostname -s 2>/dev/null || echo "")
+_auto_ip=$(ip route get 1.1.1.1 2>/dev/null | sed -n 's/.* src \([0-9.]*\).*/\1/p' | head -1)
+
+read -r -p "Node name [${_auto_name}]: " input
+THIS_NODE_NAME="${input:-${_auto_name}}"
+
+read -r -p "Node IP   [${_auto_ip}]: " input
+THIS_NODE_IP="${input:-${_auto_ip}}"
+
+[[ -z "${THIS_NODE_NAME}" ]] && echo "Error: node name is required" && exit 1
+[[ -z "${THIS_NODE_IP}" ]]   && echo "Error: node IP is required"   && exit 1
+
+EXTRA_SANS=""
 if [[ "${NODE_ROLE}" == "server-init" || "${NODE_ROLE}" == "server-additional" ]]; then
-  echo ""
-  if [[ "${NODE_ROLE}" == "server-init" ]]; then
-    echo "First server setup"
-  else
-    echo "Additional server setup"
-  fi
-  echo "─────────────────────────────────────────"
-
-  _auto_name=$(hostname -s 2>/dev/null || echo "")
-  _auto_ip=$(ip route get 1.1.1.1 2>/dev/null | sed -n 's/.* src \([0-9.]*\).*/\1/p' | head -1)
-
-  read -r -p "Node name [${_auto_name}]: " input
-  THIS_NODE_NAME="${input:-${_auto_name}}"
-
-  read -r -p "Node IP   [${_auto_ip}]: " input
-  THIS_NODE_IP="${input:-${_auto_ip}}"
-
-  [[ -z "${THIS_NODE_NAME}" ]] && echo "Error: node name is required" && exit 1
-  [[ -z "${THIS_NODE_IP}" ]]   && echo "Error: node IP is required"   && exit 1
-
   echo ""
   echo "TLS SANs"
   echo "  Always included: ${THIS_NODE_NAME}, ${THIS_NODE_IP}"
   read -r -p "  Additional (space-separated, leave blank to skip): " input
   EXTRA_SANS="${input}"
-
-  FIRST_SERVER_URL=""
-  if [[ "${NODE_ROLE}" == "server-additional" ]]; then
-    echo ""
-    while [[ -z "${FIRST_SERVER_URL}" ]]; do
-      read -r -p "First server URL (e.g. https://192.168.1.10:9345): " FIRST_SERVER_URL
-    done
-  fi
-
-  PATCHED_CONFIG="$(mktemp)"
-  if [[ "${NODE_ROLE}" == "server-init" ]]; then
-    awk -v name="${THIS_NODE_NAME}" -v ip="${THIS_NODE_IP}" -v extra="${EXTRA_SANS}" '
-      /^tls-san:/ {
-        skip_tls=1
-        print "tls-san:"
-        print "  - " name
-        print "  - " ip
-        n = split(extra, sans, " ")
-        for (i = 1; i <= n; i++) if (sans[i] != "") print "  - " sans[i]
-        next
-      }
-      skip_tls && /^  - / { next }
-      skip_tls && !/^  - / { skip_tls=0 }
-      /^node-name:/         { print "node-name: " name; next }
-      /^node-ip:/           { print "node-ip: "   ip;   next }
-      /^advertise-address:/ { print "advertise-address: " ip; next }
-      { print }
-    ' "${CONFIG_FILE}" > "${PATCHED_CONFIG}"
-  else
-    awk -v name="${THIS_NODE_NAME}" -v ip="${THIS_NODE_IP}" -v extra="${EXTRA_SANS}" -v url="${FIRST_SERVER_URL}" '
-      /^tls-san:/ {
-        skip_tls=1
-        print "tls-san:"
-        print "  - " name
-        print "  - " ip
-        n = split(extra, sans, " ")
-        for (i = 1; i <= n; i++) if (sans[i] != "") print "  - " sans[i]
-        next
-      }
-      skip_tls && /^  - / { next }
-      skip_tls && !/^  - / { skip_tls=0 }
-      /^node-name:/         { print "node-name: " name; next }
-      /^node-ip:/           { print "node-ip: "   ip;   next }
-      /^advertise-address:/ { print "advertise-address: " ip; next }
-      /^# ── Additional/   { exit }
-      { print }
-      END { print "server: " url }
-    ' "${CONFIG_FILE}" > "${PATCHED_CONFIG}"
-  fi
-  CONFIG_FILE="${PATCHED_CONFIG}"
 fi
+
+FIRST_SERVER_URL=""
+if [[ "${NODE_ROLE}" == "server-additional" ]]; then
+  echo ""
+  while [[ -z "${FIRST_SERVER_URL}" ]]; do
+    read -r -p "First server URL (e.g. https://192.168.1.10:9345): " FIRST_SERVER_URL
+  done
+fi
+
+PATCHED_CONFIG="$(mktemp)"
+if [[ "${NODE_ROLE}" == "server-init" ]]; then
+  awk -v name="${THIS_NODE_NAME}" -v ip="${THIS_NODE_IP}" -v extra="${EXTRA_SANS}" '
+    /^tls-san:/ {
+      skip_tls=1
+      print "tls-san:"
+      print "  - " name
+      print "  - " ip
+      n = split(extra, sans, " ")
+      for (i = 1; i <= n; i++) if (sans[i] != "") print "  - " sans[i]
+      next
+    }
+    skip_tls && /^  - / { next }
+    skip_tls && !/^  - / { skip_tls=0 }
+    /^node-name:/         { print "node-name: " name; next }
+    /^node-ip:/           { print "node-ip: "   ip;   next }
+    /^advertise-address:/ { print "advertise-address: " ip; next }
+    { print }
+  ' "${CONFIG_FILE}" > "${PATCHED_CONFIG}"
+elif [[ "${NODE_ROLE}" == "server-additional" ]]; then
+  awk -v name="${THIS_NODE_NAME}" -v ip="${THIS_NODE_IP}" -v extra="${EXTRA_SANS}" -v url="${FIRST_SERVER_URL}" '
+    /^tls-san:/ {
+      skip_tls=1
+      print "tls-san:"
+      print "  - " name
+      print "  - " ip
+      n = split(extra, sans, " ")
+      for (i = 1; i <= n; i++) if (sans[i] != "") print "  - " sans[i]
+      next
+    }
+    skip_tls && /^  - / { next }
+    skip_tls && !/^  - / { skip_tls=0 }
+    /^node-name:/         { print "node-name: " name; next }
+    /^node-ip:/           { print "node-ip: "   ip;   next }
+    /^advertise-address:/ { print "advertise-address: " ip; next }
+    /^# ── Additional/   { exit }
+    { print }
+    END { print "server: " url }
+  ' "${CONFIG_FILE}" > "${PATCHED_CONFIG}"
+else
+  # agent: base config has token+server; append node identity
+  {
+    cat "${CONFIG_FILE}"
+    echo "node-name: ${THIS_NODE_NAME}"
+    echo "node-ip: ${THIS_NODE_IP}"
+  } > "${PATCHED_CONFIG}"
+fi
+CONFIG_FILE="${PATCHED_CONFIG}"
 
 # ── Read config ───────────────────────────────────────────────────────────────
 
