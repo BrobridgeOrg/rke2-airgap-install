@@ -105,19 +105,38 @@ All options are set in `config.env` (copied from `config.env.example`):
 
 Variables marked **auto** are detected at `make prepare` time and can be overridden by setting them in `config.env`.
 
+Variables marked **auto** are detected at `make prepare` time and can be overridden by setting them in `config.env`.
+
+**Bundle**
+
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `RKE2_VERSION` | `v1.35.4+rke2r1` | RKE2 version to install |
 | `ARCH` | **auto** `uname -m` | Architecture (`amd64` \| `arm64`) |
 | `TARGET_OS` | **auto** build OS | Target OS family (`rhel` \| `ubuntu`) |
 | `LINUX_MAJOR` | **auto** `VERSION_ID` | RHEL major version for RPM repo |
+
+**Node**
+
+| Variable | Default | Description |
+|----------|---------|-------------|
 | `TOKEN` | **auto** generated | Shared cluster secret; written back to `config.env` on first run |
 | `NODE_NAME` | **auto** `hostname -s` | First server hostname |
 | `NODE_IP` | **auto** primary route | First server IP address |
+| `TLS_SANS` | — | Extra SANs appended to NODE_NAME and NODE_IP |
+
+**Security**
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `CIS` | `false` | Enable CIS hardening profile |
+
+**Advanced (server only)**
+
+| Variable | Default | Description |
+|----------|---------|-------------|
 | `CNI` | `canal` | `canal` \| `cilium` \| `calico` \| `none` |
 | `INGRESS` | `traefik` | `traefik` \| `nginx` \| `none` |
-| `TLS_SANS` | — | Extra SANs appended to NODE_NAME and NODE_IP |
-| `CIS` | `false` | Enable CIS hardening profile |
 | `SCHEDULABLE` | `true` | `false`: add `CriticalAddonsOnly=true:NoExecute` taint (dedicated control plane) |
 | `DISABLE_CLOUD_CONTROLLER` | `false` | Disable built-in cloud controller |
 | `DISABLE_KUBE_PROXY` | `false` | Disable kube-proxy (recommended with Cilium) |

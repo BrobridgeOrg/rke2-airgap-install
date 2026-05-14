@@ -103,19 +103,36 @@ kubectl get nodes
 
 標示**自動**的變數會在 `make prepare` 時自動偵測，可在 `config.env` 中設定值來覆蓋。
 
+**Bundle**
+
 | 變數 | 預設值 | 說明 |
 |------|--------|------|
 | `RKE2_VERSION` | `v1.35.4+rke2r1` | 要安裝的 RKE2 版本 |
 | `ARCH` | **自動** `uname -m` | 架構（`amd64` \| `arm64`） |
 | `TARGET_OS` | **自動** 建置機器 OS | 目標 OS 類型（`rhel` \| `ubuntu`） |
 | `LINUX_MAJOR` | **自動** `VERSION_ID` | RHEL 主版本號（RPM repo 用） |
+
+**Node**
+
+| 變數 | 預設值 | 說明 |
+|------|--------|------|
 | `TOKEN` | **自動**產生 | 叢集共用密鑰；首次執行時自動產生並寫回 `config.env` |
 | `NODE_NAME` | **自動** `hostname -s` | 第一台 Server 的主機名稱 |
 | `NODE_IP` | **自動** 主要路由 | 第一台 Server 的 IP 位址 |
+| `TLS_SANS` | — | 附加到 NODE_NAME 和 NODE_IP 的額外 SAN |
+
+**Security**
+
+| 變數 | 預設值 | 說明 |
+|------|--------|------|
+| `CIS` | `false` | 啟用 CIS 強化設定檔 |
+
+**Advanced（僅 server 節點）**
+
+| 變數 | 預設值 | 說明 |
+|------|--------|------|
 | `CNI` | `canal` | `canal` \| `cilium` \| `calico` \| `none` |
 | `INGRESS` | `traefik` | `traefik` \| `nginx` \| `none` |
-| `TLS_SANS` | — | 附加到 NODE_NAME 和 NODE_IP 的額外 SAN |
-| `CIS` | `false` | 啟用 CIS 強化設定檔 |
 | `SCHEDULABLE` | `true` | `false`：加上 `CriticalAddonsOnly=true:NoExecute` taint（專用控制平面） |
 | `DISABLE_CLOUD_CONTROLLER` | `false` | 停用內建 Cloud Controller |
 | `DISABLE_KUBE_PROXY` | `false` | 停用 kube-proxy（使用 Cilium 時建議開啟） |
