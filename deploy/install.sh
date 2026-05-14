@@ -193,10 +193,15 @@ if [[ "${NODE_ROLE}" == "server-init" || "${NODE_ROLE}" == "server-additional" ]
 fi
 
 FIRST_SERVER_URL=""
-if [[ "${NODE_ROLE}" == "server-additional" ]]; then
+if [[ "${NODE_ROLE}" == "server-additional" || "${NODE_ROLE}" == "agent" ]]; then
   echo ""
+  _default_server=""
+  if [[ "${NODE_ROLE}" == "agent" ]]; then
+    _default_server=$(grep '^server:' "${CONFIG_FILE}" 2>/dev/null | sed 's/^server: *//' | head -1)
+  fi
   while [[ -z "${FIRST_SERVER_URL}" ]]; do
-    read -r -p "First server URL (e.g. https://192.168.1.10:9345): " FIRST_SERVER_URL
+    read -r -p "First server URL${_default_server:+ [${_default_server}]}: " input
+    FIRST_SERVER_URL="${input:-${_default_server}}"
   done
 fi
 
@@ -240,12 +245,12 @@ elif [[ "${NODE_ROLE}" == "server-additional" ]]; then
     END { print "server: " url }
   ' "${CONFIG_FILE}" > "${PATCHED_CONFIG}"
 else
-  # agent: base config has token+server; append node identity
-  {
-    cat "${CONFIG_FILE}"
-    echo "node-name: ${THIS_NODE_NAME}"
-    echo "node-ip: ${THIS_NODE_IP}"
-  } > "${PATCHED_CONFIG}"
+  # agent: replace server URL, append node identity
+  awk -v name="${THIS_NODE_NAME}" -v ip="${THIS_NODE_IP}" -v url="${FIRST_SERVER_URL}" '
+    /^server:/ { print "server: " url; next }
+    { print }
+    END { print "node-name: " name; print "node-ip: " ip }
+  ' "${CONFIG_FILE}" > "${PATCHED_CONFIG}"
 fi
 CONFIG_FILE="${PATCHED_CONFIG}"
 
