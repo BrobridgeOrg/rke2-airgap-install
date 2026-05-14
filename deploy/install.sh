@@ -184,8 +184,15 @@ if [[ "${NODE_ROLE}" == "server-init" || "${NODE_ROLE}" == "server-additional" ]
   [[ -z "${THIS_NODE_NAME}" ]] && echo "Error: node name is required" && exit 1
   [[ -z "${THIS_NODE_IP}" ]]   && echo "Error: node IP is required"   && exit 1
 
+  echo ""
+  echo "TLS SANs"
+  echo "  Always included: ${THIS_NODE_NAME}, ${THIS_NODE_IP}"
+  read -r -p "  Additional (space-separated, leave blank to skip): " input
+  EXTRA_SANS="${input}"
+
   FIRST_SERVER_URL=""
   if [[ "${NODE_ROLE}" == "server-additional" ]]; then
+    echo ""
     while [[ -z "${FIRST_SERVER_URL}" ]]; do
       read -r -p "First server URL (e.g. https://192.168.1.10:9345): " FIRST_SERVER_URL
     done
@@ -193,12 +200,14 @@ if [[ "${NODE_ROLE}" == "server-init" || "${NODE_ROLE}" == "server-additional" ]
 
   PATCHED_CONFIG="$(mktemp)"
   if [[ "${NODE_ROLE}" == "server-init" ]]; then
-    awk -v name="${THIS_NODE_NAME}" -v ip="${THIS_NODE_IP}" '
+    awk -v name="${THIS_NODE_NAME}" -v ip="${THIS_NODE_IP}" -v extra="${EXTRA_SANS}" '
       /^tls-san:/ {
         skip_tls=1
         print "tls-san:"
         print "  - " name
         print "  - " ip
+        n = split(extra, sans, " ")
+        for (i = 1; i <= n; i++) if (sans[i] != "") print "  - " sans[i]
         next
       }
       skip_tls && /^  - / { next }
@@ -209,12 +218,14 @@ if [[ "${NODE_ROLE}" == "server-init" || "${NODE_ROLE}" == "server-additional" ]
       { print }
     ' "${CONFIG_FILE}" > "${PATCHED_CONFIG}"
   else
-    awk -v name="${THIS_NODE_NAME}" -v ip="${THIS_NODE_IP}" -v url="${FIRST_SERVER_URL}" '
+    awk -v name="${THIS_NODE_NAME}" -v ip="${THIS_NODE_IP}" -v extra="${EXTRA_SANS}" -v url="${FIRST_SERVER_URL}" '
       /^tls-san:/ {
         skip_tls=1
         print "tls-san:"
         print "  - " name
         print "  - " ip
+        n = split(extra, sans, " ")
+        for (i = 1; i <= n; i++) if (sans[i] != "") print "  - " sans[i]
         next
       }
       skip_tls && /^  - / { next }
