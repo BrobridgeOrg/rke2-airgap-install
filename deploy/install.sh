@@ -174,10 +174,10 @@ echo "────────────────────────�
 _auto_name=$(hostname -s 2>/dev/null || echo "")
 _auto_ip=$(ip route get 1.1.1.1 2>/dev/null | sed -n 's/.* src \([0-9.]*\).*/\1/p' | head -1)
 
-read -r -p "Node name [${_auto_name}]: " input
+read -r -p "Node name [${_auto_name:-e.g. my-server}]: " input
 THIS_NODE_NAME="${input:-${_auto_name}}"
 
-read -r -p "Node IP   [${_auto_ip}]: " input
+read -r -p "Node IP   [${_auto_ip:-e.g. 192.168.1.10}]: " input
 THIS_NODE_IP="${input:-${_auto_ip}}"
 
 [[ -z "${THIS_NODE_NAME}" ]] && echo "Error: node name is required" && exit 1
@@ -200,7 +200,7 @@ if [[ "${NODE_ROLE}" == "server-additional" || "${NODE_ROLE}" == "agent" ]]; the
     _default_server=$(grep '^server:' "${CONFIG_FILE}" 2>/dev/null | sed 's/^server: *//' | head -1)
   fi
   while [[ -z "${FIRST_SERVER_URL}" ]]; do
-    read -r -p "First server URL${_default_server:+ [${_default_server}]}: " input
+    read -r -p "First server URL [${_default_server:-e.g. https://192.168.1.10:9345}]: " input
     FIRST_SERVER_URL="${input:-${_default_server}}"
   done
 fi
