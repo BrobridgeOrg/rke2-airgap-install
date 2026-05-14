@@ -1,5 +1,7 @@
 # RKE2 Air-Gap install
 
+[繁體中文](README.zh-TW.md)
+
 Bash scripts and Makefiles for installing [RKE2](https://docs.rke2.io/) in air-gapped (offline) environments on RHEL and Ubuntu.
 
 ## Requirements
