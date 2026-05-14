@@ -1,27 +1,41 @@
 RKE2_VERSION       ?= v1.35.3+rke2r1
-ARCH               ?= amd64
+_UNAME_M           := $(shell uname -m)
+ARCH               ?= $(patsubst x86_64,amd64,$(patsubst aarch64,arm64,$(_UNAME_M)))
 CNI                ?= canal
 INGRESS            ?= traefik
 ARTIFACTS_BASE_URL ?=
-TARGET_OS     ?= rhel
+_BUILD_OS_ID  := $(shell . /etc/os-release 2>/dev/null && printf '%s' "$${ID:-}")
+TARGET_OS     ?= $(if $(filter ubuntu debian,$(_BUILD_OS_ID)),ubuntu,rhel)
 TARGET_OS     := $(strip $(TARGET_OS))
 RKE2_MINOR    := $(shell echo $(RKE2_VERSION) | sed 's/v1\.\([0-9]*\)\..*/\1/')
 LINUX_MAJOR   ?= 9
 OUT_DIR       ?= output
 
 # gen-config options
-ROLE                    ?= server
-CIS                     ?= false
-SCHEDULABLE             ?= true
+CIS                      ?= false
+SCHEDULABLE              ?= true
 DISABLE_CLOUD_CONTROLLER ?= false
 DISABLE_KUBE_PROXY       ?= false
-RANCHER_PRIME ?= false
-TIMEZONE      ?= Asia/Taipei
-TOKEN      ?=
-NODE_NAME  ?=
-NODE_IP    ?=
-SERVER_URL ?=
-TLS_SANS   ?=
+RANCHER_PRIME            ?= false
+TIMEZONE                 ?= Asia/Taipei
+TLS_SANS                 ?=
+
+# Auto-detect node identity; override in config.env if needed
+NODE_NAME ?= $(shell hostname -s 2>/dev/null)
+NODE_IP   ?= $(shell ip route get 1.1.1.1 2>/dev/null | awk '/src/{for(i=1;i<=NF;i++) if($$i=="src") print $$(i+1); exit}')
+
+# TOKEN: auto-generate and save to config.env if not set
+ifeq ($(strip $(TOKEN)),)
+TOKEN := $(shell openssl rand -hex 32)
+_SAVE_TOKEN := $(shell \
+  if [ ! -f config.env ] && [ -f config.env.example ]; then cp config.env.example config.env; fi; \
+  if grep -q '^TOKEN=' config.env 2>/dev/null; then \
+    perl -i -pe 's/^TOKEN=.*/TOKEN=$(TOKEN)/' config.env; \
+  else \
+    printf '\nTOKEN=%s\n' '$(TOKEN)' >> config.env; \
+  fi)
+$(info TOKEN auto-generated and saved to config.env)
+endif
 
 ARTIFACTS_DIR := $(OUT_DIR)/artifacts
 RPM_REPO_DIR  := $(OUT_DIR)/rpm-repo
@@ -44,25 +58,29 @@ rpm-repo:
 	./bundle/build-rpm-repo.sh --rke2-minor $(RKE2_MINOR) --linux-major $(LINUX_MAJOR) --arch $(ARCH) --dest $(RPM_REPO_DIR)
 
 config:
-	$(if $(TOKEN),,$(error TOKEN is required. Set it in .env or via: make config TOKEN=...))
-	$(if $(NODE_NAME),,$(error NODE_NAME is required. Set it in .env or via: make config NODE_NAME=...))
-	$(if $(NODE_IP),,$(error NODE_IP is required. Set it in .env or via: make config NODE_IP=...))
+	$(if $(strip $(NODE_IP)),,$(error NODE_IP could not be auto-detected. Set it in config.env: NODE_IP=x.x.x.x))
+	$(if $(strip $(NODE_NAME)),,$(error NODE_NAME could not be auto-detected. Set it in config.env: NODE_NAME=hostname))
 	./bundle/gen-config.sh \
-		--role    $(ROLE) \
+		--role    server \
 		--token   $(TOKEN) \
 		--cni     $(CNI) \
-		--dest    $(OUT_DIR)/config.yaml \
 		--ingress $(INGRESS) \
-		$(if $(NODE_NAME),--node-name $(NODE_NAME),) \
-		$(if $(NODE_IP),--node-ip $(NODE_IP),) \
-		$(if $(SERVER_URL),--server-url $(SERVER_URL),) \
+		--node-name $(NODE_NAME) \
+		--node-ip   $(NODE_IP) \
 		$(if $(TLS_SANS),--tls-san "$(TLS_SANS)",) \
 		$(if $(filter true,$(CIS)),--cis,) \
 		$(if $(filter false,$(SCHEDULABLE)),--no-schedule,) \
 		$(if $(filter true,$(DISABLE_CLOUD_CONTROLLER)),--disable-cloud-controller,) \
 		$(if $(filter true,$(DISABLE_KUBE_PROXY)),--disable-kube-proxy,) \
 		$(if $(filter true,$(RANCHER_PRIME)),--rancher-prime,) \
-		$(if $(TIMEZONE),--timezone "$(TIMEZONE)",)
+		$(if $(TIMEZONE),--timezone "$(TIMEZONE)",) \
+		--dest $(OUT_DIR)/config-server.yaml
+	./bundle/gen-config.sh \
+		--role       agent \
+		--token      $(TOKEN) \
+		--server-url https://$(NODE_IP):9345 \
+		$(if $(filter true,$(CIS)),--cis,) \
+		--dest $(OUT_DIR)/config-agent.yaml
 
 prepare: $(_PREPARE_DEPS)
 	cp -r deploy/. $(OUT_DIR)/

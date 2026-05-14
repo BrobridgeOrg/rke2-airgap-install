@@ -26,29 +26,25 @@ Usage: $(basename "$0") [options]
 
 Options:
   -r, --role        Node role: server | agent  (default: ${ROLE})
-                    server without --server-url = init (first) node
-                    server with    --server-url = additional server node
   -t, --token       Cluster shared secret  (required)
-  -n, --node-name   Node name  (required)
-      --node-ip     Node IP address  (required)
-  -s, --server-url  First server URL, e.g. https://192.168.1.10:9345
-                    (required for agent and additional server)
-      --tls-san     Additional SANs, space-separated (default: node-name and node-ip)
+  -n, --node-name   Node name  (required for server)
+      --node-ip     Node IP address  (required for server)
+  -s, --server-url  First server URL  (required for agent)
+      --tls-san     Additional SANs, space-separated
   -c, --cni         CNI type: canal | cilium | calico | none  (default: ${CNI})
   -i, --ingress     Ingress controller: nginx | traefik | none  (default: ${INGRESS})
-      --cis                     Enable CIS hardening profile
-      --no-schedule             Add CriticalAddonsOnly=true:NoExecute taint (dedicated control plane)
-      --disable-cloud-controller  Disable built-in cloud controller manager
-      --disable-kube-proxy        Disable kube-proxy (e.g. when using Cilium)
-      --rancher-prime               Use Rancher Prime registry (registry.rancher.com)
+      --cis                       Enable CIS hardening profile
+      --no-schedule               Add CriticalAddonsOnly=true:NoExecute taint
+      --disable-cloud-controller  Disable built-in cloud controller
+      --disable-kube-proxy        Disable kube-proxy (e.g. with Cilium)
+      --rancher-prime             Use Rancher Prime registry
       --timezone    Timezone for kube component env  (default: ${TIMEZONE})
   -d, --dest        Output file path  (default: ${OUT_FILE})
   -h, --help        Show this help
 
 Examples:
   $(basename "$0") --role server --token mytoken --node-name node1 --node-ip 192.168.1.10
-  $(basename "$0") --role server --token mytoken --node-name node1 --node-ip 192.168.1.10 --tls-san "192.168.1.10 rke2.example.com"
-  $(basename "$0") --role agent  --token mytoken --node-name node2 --node-ip 192.168.1.11 --server-url https://192.168.1.10:9345
+  $(basename "$0") --role agent  --token mytoken --server-url https://192.168.1.10:9345
 EOF
   exit 0
 }
@@ -64,12 +60,12 @@ while [[ $# -gt 0 ]]; do
        --tls-san)     TLS_SANS="$2";    shift 2 ;;
     -c|--cni)         CNI="$2";         shift 2 ;;
     -i|--ingress)     INGRESS="$2";     shift 2 ;;
-       --cis)                      CIS=true;          shift ;;
-       --no-schedule)              SCHEDULABLE=false; shift ;;
-       --disable-cloud-controller) DISABLE_CLOUD_CONTROLLER=true;        shift ;;
-       --disable-kube-proxy)       DISABLE_KUBE_PROXY=true; shift ;;
-       --rancher-prime)            RANCHER_PRIME=true;    shift ;;
-       --timezone)                 TIMEZONE="$2";        shift 2 ;;
+       --cis)                      CIS=true;                        shift ;;
+       --no-schedule)              SCHEDULABLE=false;               shift ;;
+       --disable-cloud-controller) DISABLE_CLOUD_CONTROLLER=true;  shift ;;
+       --disable-kube-proxy)       DISABLE_KUBE_PROXY=true;        shift ;;
+       --rancher-prime)            RANCHER_PRIME=true;              shift ;;
+       --timezone)                 TIMEZONE="$2";                   shift 2 ;;
     -d|--dest)        OUT_FILE="$2";    shift 2 ;;
     -h|--help)        usage ;;
     *) echo "Unknown option: $1"; usage ;;
@@ -77,14 +73,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Validate
-[[ -z "${TOKEN}" ]]     && echo "Error: --token is required"     && exit 1
-[[ -z "${NODE_NAME}" ]] && echo "Error: --node-name is required" && exit 1
-[[ -z "${NODE_IP}" ]]   && echo "Error: --node-ip is required"   && exit 1
-
-if [[ "${ROLE}" == "agent" && -z "${SERVER_URL}" ]]; then
-  echo "Error: --server-url is required for agent role"
-  exit 1
-fi
+[[ -z "${TOKEN}" ]] && echo "Error: --token is required" && exit 1
 
 case "${ROLE}" in
   server|agent) ;;
@@ -101,8 +90,17 @@ case "${INGRESS}" in
   *) echo "Error: unsupported ingress: ${INGRESS}"; exit 1 ;;
 esac
 
-# Always include node-name and node-ip in TLS SANs, append extra SANs if provided
-TLS_SANS="${NODE_NAME} ${NODE_IP}${TLS_SANS:+ ${TLS_SANS}}"
+if [[ "${ROLE}" == "server" ]]; then
+  [[ -z "${NODE_NAME}" ]] && echo "Error: --node-name is required for server" && exit 1
+  [[ -z "${NODE_IP}" ]]   && echo "Error: --node-ip is required for server"   && exit 1
+else
+  [[ -z "${SERVER_URL}" ]] && echo "Error: --server-url is required for agent" && exit 1
+fi
+
+# Build TLS SANs for server
+if [[ "${ROLE}" == "server" ]]; then
+  TLS_SANS="${NODE_NAME} ${NODE_IP}${TLS_SANS:+ ${TLS_SANS}}"
+fi
 
 # Generate config
 mkdir -p "$(dirname "${OUT_FILE}")"
@@ -111,27 +109,19 @@ mkdir -p "$(dirname "${OUT_FILE}")"
   if [[ "${ROLE}" == "server" ]]; then
     echo 'write-kubeconfig-mode: "0644"'
     echo ""
-  fi
-
-  # Node
-  echo "node-name: ${NODE_NAME}"
-  echo "node-ip: ${NODE_IP}"
-
-  if [[ "${ROLE}" == "server" ]]; then
+    echo "node-name: ${NODE_NAME}"
+    echo "node-ip: ${NODE_IP}"
     echo "advertise-address: ${NODE_IP}"
-
     echo "tls-san:"
     for san in ${TLS_SANS}; do
       echo "  - ${san}"
     done
-
     if [[ "${SCHEDULABLE}" == false ]]; then
       echo "node-taint:"
       echo '  - "CriticalAddonsOnly=true:NoExecute"'
     fi
+    echo ""
   fi
-
-  echo ""
 
   # Cluster
   echo "token: ${TOKEN}"
@@ -189,17 +179,25 @@ mkdir -p "$(dirname "${OUT_FILE}")"
       echo "${component}-extra-env:"
       echo "  - \"TZ=${TIMEZONE}\""
     done
+
+    echo ""
+    echo "# ── Additional server node ─────────────────────────────────────────────────"
+    echo "# To join another server, run install.sh and select 'Server (additional node)'."
+    echo "# When prompted for the first server URL, enter:"
+    echo "#   https://${NODE_IP}:9345"
   fi
 } > "${OUT_FILE}"
 
 echo "Role: ${ROLE}"
-echo "Node name: ${NODE_NAME}"
-echo "Node IP: ${NODE_IP}"
+if [[ "${ROLE}" == "server" ]]; then
+  echo "Node name: ${NODE_NAME}"
+  echo "Node IP:   ${NODE_IP}"
+  echo "TLS SANs:  ${TLS_SANS}"
+  echo "CNI:       ${CNI}"
+  echo "Ingress:   ${INGRESS}"
+  echo "Timezone:  ${TIMEZONE}"
+fi
 [[ -n "${SERVER_URL}" ]] && echo "Server URL: ${SERVER_URL}"
-echo "TLS SANs: ${TLS_SANS}"
-echo "CNI: ${CNI}"
-echo "Ingress: ${INGRESS}"
-echo "Timezone: ${TIMEZONE}"
 [[ "${RANCHER_PRIME}" == true ]] && echo "Rancher Prime: yes (registry.rancher.com)"
 echo ""
 echo "Config written to: ${OUT_FILE}"

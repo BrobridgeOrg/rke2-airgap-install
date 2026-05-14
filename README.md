@@ -7,6 +7,7 @@ Bash scripts and Makefiles for installing [RKE2](https://docs.rke2.io/) in air-g
 **Online machine** (bundle preparation):
 - `git`, `make`
 - `curl`
+- `openssl` (for TOKEN auto-generation)
 - `vim` (or any text editor, for editing `config.env`)
 - `createrepo_c`, `dnf-plugins-core` (RPM repo sync, RHEL bundles only)
 
@@ -22,16 +23,21 @@ Bash scripts and Makefiles for installing [RKE2](https://docs.rke2.io/) in air-g
 
 ```bash
 cp config.env.example config.env
-# Edit config.env and fill in TOKEN, NODE_NAME, NODE_IP, etc.
+# Edit config.env — only CNI, INGRESS, and cluster settings are typically needed.
+# TOKEN, NODE_NAME, NODE_IP, and ARCH are auto-detected on first run.
 ```
 
 ### 2. Prepare bundle (online machine)
 
 ```bash
-make prepare              # fetch artifacts, sync RPM repo (RHEL), generate config
+make prepare              # fetch artifacts, sync RPM repo (RHEL), generate configs
 make prepare TARGET_OS=ubuntu  # skip RPM repo for Ubuntu target machines
 make bundle               # package everything into rke2-airgap-<version>-<arch>.tar.gz
 ```
+
+This produces **two config files** in `output/`:
+- `config-server.yaml` — for the first (init) server node
+- `config-agent.yaml` — for agent nodes; `server:` is pre-set to the first server's IP
 
 #### Private registry (optional)
 
@@ -71,7 +77,16 @@ Run the interactive installer:
 ./install.sh
 ```
 
-It reads `config.yaml` and `artifacts/` to auto-detect role, CNI, and CIS settings, then runs the numbered scripts in `scripts/` in order.
+The installer prompts for the node type:
+
+```
+Node type:
+  1) Server (first node)    ← init cluster
+  2) Server (additional node) ← prompts for first server URL, patches config
+  3) Agent
+```
+
+It auto-selects `config-server.yaml` or `config-agent.yaml` based on the selection, detects CNI and CIS from artifacts and config, then runs the numbered scripts in order.
 
 > **CIS hardening**: if enabled, kernel parameters take effect immediately. A reboot after installation is recommended to verify settings persist.
 
@@ -88,14 +103,12 @@ All options are set in `config.env` (copied from `config.env.example`):
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `RKE2_VERSION` | | `v1.35.3+rke2r1` | RKE2 version to install |
-| `ARCH` | | `amd64` | Architecture (`amd64` \| `arm64`) |
-| `TARGET_OS` | | `rhel` | Target OS family (`rhel` \| `ubuntu`) |
-| `TOKEN` | yes | — | Shared cluster secret |
-| `NODE_NAME` | yes | — | Node hostname |
-| `NODE_IP` | yes | — | Node IP address |
-| `ROLE` | | `server` | Node role (`server` \| `agent`) |
-| `SERVER_URL` | for agent / additional server | — | e.g. `https://192.168.1.10:9345` |
+| `RKE2_VERSION` | | `v1.35.4+rke2r1` | RKE2 version to install |
+| `ARCH` | | auto (`uname -m`) | Architecture (`amd64` \| `arm64`) |
+| `TARGET_OS` | | auto (build OS) | Target OS family (`rhel` \| `ubuntu`) |
+| `TOKEN` | | auto-generated | Shared cluster secret; written to `config.env` on first run |
+| `NODE_NAME` | | auto (`hostname -s`) | First server hostname |
+| `NODE_IP` | | auto (primary route) | First server IP address |
 | `CNI` | | `canal` | `canal` \| `cilium` \| `calico` \| `none` |
 | `INGRESS` | | `traefik` | `traefik` \| `nginx` \| `none` |
 | `TLS_SANS` | | — | Extra SANs appended to NODE_NAME and NODE_IP |
@@ -109,34 +122,20 @@ All options are set in `config.env` (copied from `config.env.example`):
 
 ## Multi-node Setup
 
-Generate a separate bundle for each node. Edit `config.env` for each node before running `make prepare`.
+One bundle covers all node types. Prepare the bundle once on the first server machine — TOKEN, NODE_NAME, and NODE_IP are auto-detected.
 
 **First server**
 ```bash
-# config.env
-TOKEN=secret
-NODE_NAME=node1
-NODE_IP=192.168.1.10
+# config.env — only set what differs from defaults
+CNI=canal
+# run make prepare; TOKEN/NODE_NAME/NODE_IP auto-detected
 ```
 
-**Additional server**
-```bash
-# config.env
-TOKEN=secret
-NODE_NAME=node2
-NODE_IP=192.168.1.11
-SERVER_URL=https://192.168.1.10:9345
-```
+**Additional server / Agent**
 
-**Agent**
-```bash
-# config.env
-ROLE=agent
-TOKEN=secret
-NODE_NAME=node3
-NODE_IP=192.168.1.12
-SERVER_URL=https://192.168.1.10:9345
-```
+Transfer the same bundle. Run `./install.sh` and select:
+- `Server (additional node)` — prompted for the first server URL, node identity auto-detected
+- `Agent` — uses `config-agent.yaml` which already has `server:` set to the first server
 
 ## Make Targets
 
@@ -144,7 +143,7 @@ SERVER_URL=https://192.168.1.10:9345
 |--------|-------------|
 | `make fetch` | Download install.sh and image tarballs |
 | `make rpm-repo` | Sync RPM packages (RHEL only) |
-| `make config` | Generate `config.yaml` |
+| `make config` | Generate `config-server.yaml` and `config-agent.yaml` |
 | `make prepare` | Run all of the above and copy deploy scripts |
 | `make bundle` | Package `output/` into a `.tar.gz` |
 | `make clean` | Remove `output/` and the bundle tarball |

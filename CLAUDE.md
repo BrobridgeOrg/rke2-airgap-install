@@ -85,11 +85,9 @@ cmd/
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `TOKEN` | yes | Shared cluster secret |
-| `NODE_NAME` | yes | Node hostname |
-| `NODE_IP` | yes | Node IP address |
-| `ROLE` | — | `server` (default) or `agent` |
-| `SERVER_URL` | for agent/additional server | e.g. `https://192.168.1.10:9345` |
+| `TOKEN` | — | Shared cluster secret; auto-generated on first run if empty |
+| `NODE_NAME` | — | First server hostname; auto-detected from `hostname -s` if empty |
+| `NODE_IP` | — | First server IP; auto-detected from primary route if empty |
 | `CNI` | — | `canal` (default), `cilium`, `calico`, `none` |
 | `INGRESS` | — | `traefik` (default), `nginx`, `none` |
 | `CIS` | — | `false` (default); enables CIS hardening profile |
@@ -98,5 +96,6 @@ cmd/
 | `TLS_SANS` | — | Extra SANs appended to NODE_NAME and NODE_IP |
 | `RANCHER_PRIME` | — | `false` (default); sets `system-default-registry: registry.rancher.com` |
 | `TIMEZONE` | — | `Asia/Taipei` (default); timezone for kube component extra-env |
-| `TARGET_OS` | — | `rhel` (default) or `ubuntu`; controls whether rpm-repo is built |
+| `ARCH` | — | auto-detected from `uname -m`; override for cross-building |
+| `TARGET_OS` | — | auto-detected from build machine OS; `rhel` or `ubuntu` |
 | `LINUX_MAJOR` | — | RHEL major version, default `9` |
