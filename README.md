@@ -54,10 +54,10 @@ output/
   install.sh
   scripts/
   cmd/
-    kubectl           ← wrapper (KUBECONFIG pre-set)
-    crictl
-    ctr
-    helm              ← wrapper → ../bin/helm (KUBECONFIG pre-set)
+    kubectl           ← server only; wrapper with KUBECONFIG pre-set
+    helm              ← server only; wrapper → ../bin/helm with KUBECONFIG pre-set
+    crictl            ← all nodes
+    ctr               ← all nodes
 ```
 
 The two config files are:

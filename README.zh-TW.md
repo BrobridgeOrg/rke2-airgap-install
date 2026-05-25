@@ -52,10 +52,10 @@ output/
   install.sh
   scripts/
   cmd/
-    kubectl           ← wrapper（已預設 KUBECONFIG）
-    crictl
-    ctr
-    helm              ← wrapper → ../bin/helm（已預設 KUBECONFIG）
+    kubectl           ← 僅限 Server 節點；wrapper（已預設 KUBECONFIG）
+    helm              ← 僅限 Server 節點；wrapper → ../bin/helm（已預設 KUBECONFIG）
+    crictl            ← 所有節點可用
+    ctr               ← 所有節點可用
 ```
 
 兩份設定檔說明：
