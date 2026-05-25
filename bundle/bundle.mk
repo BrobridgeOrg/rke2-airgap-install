@@ -89,6 +89,7 @@ prepare: $(_PREPARE_DEPS)
 	mkdir -p $(OUT_DIR)/images
 	mkdir -p $(OUT_DIR)/bin
 	mkdir -p $(OUT_DIR)/charts
+	mkdir -p $(OUT_DIR)/manifests
 	echo "$(RKE2_VERSION)" > $(OUT_DIR)/rke2-version.txt
 	@echo ""
 	@echo "Output ready at: $(OUT_DIR)"

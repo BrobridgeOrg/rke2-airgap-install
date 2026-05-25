@@ -43,6 +43,7 @@ output/
   rpm-repo/           ← RPM 套件 + repodata（僅 RHEL）
   images/             ← 放置額外映像檔與 retag.yaml
   charts/             ← 放置 Helm charts（.tgz）與對應的 values.yaml
+  manifests/          ← 放置 Kubernetes YAML 資源定義（kubectl apply 用）
   bin/
     helm              ← Helm binary
   config-server.yaml  ← 第一台 Server 節點的 RKE2 設定檔

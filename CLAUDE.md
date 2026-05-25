@@ -80,6 +80,7 @@ artifacts/          ← install.sh + binary tarball + image tarballs
 rpm-repo/           ← RPM packages + repodata (RHEL only)
 images/             ← auto-created; drop extra tarballs and retag.yaml here
 charts/             ← auto-created; drop Helm charts (.tgz) and values.yaml files here
+manifests/          ← auto-created; drop raw Kubernetes YAML manifests (kubectl apply) here
 bin/                ← auto-created; downloaded tool binaries (helm, ...)
 config-server.yaml  ← generated RKE2 config for first server node
 config-agent.yaml   ← generated RKE2 config for agent nodes (token + server URL)
@@ -117,6 +118,10 @@ ghcr.io/org/my-app:v1.0: internal.registry/my-app:v1.0
 ### charts/ directory
 
 Drop Helm chart tarballs (`.tgz`) and their `values.yaml` files here before running `make bundle`. Charts are not installed automatically — use `helm install` manually on a server node after the cluster is up.
+
+### manifests/ directory
+
+Drop raw Kubernetes YAML manifests here before running `make bundle`. Manifests are not applied automatically — use `kubectl apply -f manifests/` manually on a server node after the cluster is up.
 
 ## config.env Variables
 
