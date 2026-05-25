@@ -15,7 +15,7 @@ bundle/                   ← online machine: fetch and package artifacts
   bundle.mk               ← all Make targets
   fetch-install.sh        ← downloads install.sh from get.rke2.io
   fetch-artifacts.sh      ← downloads RKE2 image tarballs and verifies checksums
-  fetch-helm.sh           ← downloads Helm binary into output/cmd/
+  fetch-helm.sh           ← downloads Helm binary into output/bin/
   build-rpm-repo.sh       ← syncs RKE2 RPM repos (RHEL only, requires createrepo_c)
   gen-config.sh           ← generates config-server.yaml and config-agent.yaml
 deploy/                   ← air-gap machine: interactive installer and scripts
@@ -28,7 +28,7 @@ deploy/                   ← air-gap machine: interactive installer and scripts
     05-prepare-node.sh      ← copies config files and pre-loads extra images
     06-start-rke2.sh        ← starts rke2 systemd service
     07-retag-images.sh      ← retags images per images/retag.yaml (optional)
-  cmd/                    ← wrapper scripts for kubectl, crictl, ctr
+  cmd/                    ← wrapper scripts; server nodes: kubectl, helm, crictl, ctr; agent nodes: crictl, ctr
 ```
 
 ## Key Conventions
@@ -58,7 +58,7 @@ After prompting, the installer patches the selected config file in a tmpfile (vi
 make fetch       # download install.sh and image tarballs into output/artifacts/
 make rpm-repo    # sync RPM packages into output/rpm-repo/ (RHEL only)
 make config      # generate output/config-server.yaml and output/config-agent.yaml
-make prepare     # runs fetch + rpm-repo + config, copies deploy/ into output/, creates images/
+make prepare     # runs fetch + rpm-repo + config, copies deploy/ into output/, creates images/ bin/ charts/
 make bundle      # tars output/ into rke2-airgap-<version>-<arch>.tar.gz
 make clean       # removes output/ and the bundle tarball
 ```
@@ -94,13 +94,15 @@ scripts/
   06-start-rke2.sh
   07-retag-images.sh
 cmd/                ← wrapper scripts; add to PATH to use all tools
-  kubectl           ← calls /var/lib/rancher/rke2/bin/kubectl with KUBECONFIG set
-  crictl            ← calls /var/lib/rancher/rke2/bin/crictl
-  ctr               ← calls /var/lib/rancher/rke2/bin/ctr
-  helm              ← calls ../bin/helm with KUBECONFIG set
+  kubectl           ← server only; calls /var/lib/rancher/rke2/bin/kubectl with KUBECONFIG set
+  helm              ← server only; calls ../bin/helm with KUBECONFIG set
+  crictl            ← all nodes; calls /var/lib/rancher/rke2/bin/crictl
+  ctr               ← all nodes; calls /var/lib/rancher/rke2/bin/ctr
 bin/
   helm              ← downloaded by fetch-helm.sh
 ```
+
+`06-start-rke2.sh` and `install.sh` print a role-appropriate PATH hint at the end: server nodes mention kubectl and helm; agent nodes mention only crictl and ctr.
 
 ### images/ directory
 
@@ -111,6 +113,10 @@ bin/
 # images/retag.yaml format
 ghcr.io/org/my-app:v1.0: internal.registry/my-app:v1.0
 ```
+
+### charts/ directory
+
+Drop Helm chart tarballs (`.tgz`) and their `values.yaml` files here before running `make bundle`. Charts are not installed automatically — use `helm install` manually on a server node after the cluster is up.
 
 ## config.env Variables
 
