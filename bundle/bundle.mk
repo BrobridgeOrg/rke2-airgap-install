@@ -54,7 +54,7 @@ fetch:
 	./bundle/fetch-artifacts.sh --version $(RKE2_VERSION) --arch $(ARCH) --cni $(CNI) --ingress $(INGRESS) \
 		--target-os $(TARGET_OS) --dest $(ARTIFACTS_DIR) \
 		$(if $(ARTIFACTS_BASE_URL),--url $(ARTIFACTS_BASE_URL),)
-	./bundle/fetch-helm.sh --arch $(ARCH) --dest $(OUT_DIR)/cmd \
+	./bundle/fetch-helm.sh --arch $(ARCH) --dest $(OUT_DIR)/bin \
 		$(if $(HELM_VERSION),--version $(HELM_VERSION),)
 
 rpm-repo:
@@ -87,6 +87,7 @@ config:
 prepare: $(_PREPARE_DEPS)
 	cp -r deploy/. $(OUT_DIR)/
 	mkdir -p $(OUT_DIR)/images
+	mkdir -p $(OUT_DIR)/bin
 	echo "$(RKE2_VERSION)" > $(OUT_DIR)/rke2-version.txt
 	@echo ""
 	@echo "Output ready at: $(OUT_DIR)"

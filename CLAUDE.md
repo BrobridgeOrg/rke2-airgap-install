@@ -79,6 +79,7 @@ After `make prepare`, `output/` contains:
 artifacts/          ← install.sh + binary tarball + image tarballs
 rpm-repo/           ← RPM packages + repodata (RHEL only)
 images/             ← auto-created; drop extra tarballs and retag.yaml here
+bin/                ← auto-created; downloaded tool binaries (helm, ...)
 config-server.yaml  ← generated RKE2 config for first server node
 config-agent.yaml   ← generated RKE2 config for agent nodes (token + server URL)
 rke2-version.txt    ← RKE2 version string
@@ -91,10 +92,13 @@ scripts/
   05-prepare-node.sh
   06-start-rke2.sh
   07-retag-images.sh
-cmd/
-  kubectl
-  crictl
-  ctr
+cmd/                ← wrapper scripts; add to PATH to use all tools
+  kubectl           ← calls /var/lib/rancher/rke2/bin/kubectl with KUBECONFIG set
+  crictl            ← calls /var/lib/rancher/rke2/bin/crictl
+  ctr               ← calls /var/lib/rancher/rke2/bin/ctr
+  helm              ← calls ../bin/helm with KUBECONFIG set
+bin/
+  helm              ← downloaded by fetch-helm.sh
 ```
 
 ### images/ directory
