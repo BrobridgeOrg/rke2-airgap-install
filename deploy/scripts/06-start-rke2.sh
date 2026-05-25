@@ -47,5 +47,9 @@ echo "Done."
 echo "Check status:  sudo systemctl status rke2-${ROLE}"
 echo "Check journal: sudo journalctl -fu rke2-${ROLE}"
 echo ""
-echo "To use kubectl, crictl, and ctr:"
+if [[ "${ROLE}" == "server" ]]; then
+  echo "To use kubectl, helm, crictl, and ctr (server node only):"
+else
+  echo "To use crictl and ctr:"
+fi
 echo "  export PATH=\$PATH:$(pwd)/cmd"
