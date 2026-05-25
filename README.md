@@ -65,6 +65,26 @@ output/
 
 During installation, `scripts/05-prepare-node.sh` copies them into `/var/lib/rancher/rke2/agent/images/` so RKE2 loads them automatically on startup. If `images/` is empty or absent, the step is skipped.
 
+#### Image retagging (optional)
+
+Images loaded from tarballs retain the reference name baked into the tarball manifest, which may not match what your workloads expect. Place an optional `retag.yaml` in `output/images/` to remap names after RKE2 starts:
+
+```
+output/
+  images/
+    my-app.tar.zst
+    retag.yaml
+```
+
+```yaml
+# images/retag.yaml
+# format: <source reference>: <target reference>
+ghcr.io/org/my-app:v1.0: internal.registry/my-app:v1.0
+docker.io/library/nginx:1.25: localhost/nginx:1.25
+```
+
+After RKE2 starts, `scripts/07-retag-images.sh` reads this file and runs `ctr images tag` for each entry. If the source image is still being imported, the script retries for up to ~60 seconds. Entries that still fail are reported as warnings without failing the installation.
+
 Transfer the `.tar.gz` to the air-gap machine, then extract it:
 
 ```bash

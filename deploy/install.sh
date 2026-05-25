@@ -315,6 +315,9 @@ run_step "Prepare node" \
 run_step "Start RKE2" \
   "${SCRIPTS_DIR}/06-start-rke2.sh" --role "${ROLE}"
 
+run_step "Retag images" \
+  "${SCRIPTS_DIR}/07-retag-images.sh"
+
 echo ""
 if [[ "${CIS}" == "true" ]]; then
   echo "Installation complete. Reboot the node to verify CIS settings persist:"

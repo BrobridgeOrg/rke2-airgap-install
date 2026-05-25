@@ -63,6 +63,26 @@ output/
 
 安裝時，`scripts/05-prepare-node.sh` 會自動將映像檔複製到 `/var/lib/rancher/rke2/agent/images/`，RKE2 啟動時會自動載入。若 `images/` 為空或不存在則跳過此步驟。
 
+#### 映像重命名（選用）
+
+從 tarball 載入的映像，名稱取決於打包時 manifest 內的 reference，不一定符合部署環境的預期。可在 `output/images/` 放置選用的 `retag.yaml` 來重新命名：
+
+```
+output/
+  images/
+    my-app.tar.zst
+    retag.yaml
+```
+
+```yaml
+# images/retag.yaml
+# 格式：<來源名稱>: <目標名稱>
+ghcr.io/org/my-app:v1.0: internal.registry/my-app:v1.0
+docker.io/library/nginx:1.25: localhost/nginx:1.25
+```
+
+RKE2 啟動後，`scripts/07-retag-images.sh` 會讀取此檔案並對每筆記錄執行 `ctr images tag`。若來源映像尚未載入完成，腳本會自動重試最多約 60 秒。失敗的項目會顯示警告，不影響整體安裝流程。
+
 將 `.tar.gz` 傳輸到離線機器後，解壓縮：
 
 ```bash
