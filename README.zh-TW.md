@@ -140,11 +140,12 @@ First server URL [https://192.168.1.10:9345]:
 
 > **CIS 強化**：若已啟用，核心參數會立即套用。建議安裝完成後重新開機，確認設定在重啟後仍然生效。
 
-### 4. 使用 kubectl
+### 4. 使用 kubectl 與 helm
 
 ```bash
 export PATH=$PATH:$(pwd)/cmd
 kubectl get nodes
+helm version
 ```
 
 ## 設定說明
@@ -158,6 +159,7 @@ kubectl get nodes
 | 變數 | 預設值 | 說明 |
 |------|--------|------|
 | `RKE2_VERSION` | `v1.35.4+rke2r1` | 要安裝的 RKE2 版本 |
+| `HELM_VERSION` | **自動** 最新穩定版 | Helm 版本（如 `3.17.0`）；空白時從 GitHub releases 自動取得 |
 | `ARCH` | **自動** `uname -m` | 架構（`amd64` \| `arm64`） |
 | `TARGET_OS` | **自動** 建置機器 OS | 目標 OS 類型（`rhel` \| `ubuntu`） |
 | `LINUX_MAJOR` | **自動** `VERSION_ID` | RHEL 主版本號（RPM repo 用） |

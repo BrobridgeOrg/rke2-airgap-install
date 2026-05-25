@@ -1,4 +1,5 @@
 RKE2_VERSION       ?= v1.35.3+rke2r1
+HELM_VERSION       ?=
 _UNAME_M           := $(shell uname -m)
 ARCH               ?= $(patsubst x86_64,amd64,$(patsubst aarch64,arm64,$(_UNAME_M)))
 CNI                ?= canal
@@ -53,6 +54,8 @@ fetch:
 	./bundle/fetch-artifacts.sh --version $(RKE2_VERSION) --arch $(ARCH) --cni $(CNI) --ingress $(INGRESS) \
 		--target-os $(TARGET_OS) --dest $(ARTIFACTS_DIR) \
 		$(if $(ARTIFACTS_BASE_URL),--url $(ARTIFACTS_BASE_URL),)
+	./bundle/fetch-helm.sh --arch $(ARCH) --dest $(OUT_DIR)/cmd \
+		$(if $(HELM_VERSION),--version $(HELM_VERSION),)
 
 rpm-repo:
 	./bundle/build-rpm-repo.sh --rke2-minor $(RKE2_MINOR) --linux-major $(LINUX_MAJOR) --arch $(ARCH) --dest $(RPM_REPO_DIR)

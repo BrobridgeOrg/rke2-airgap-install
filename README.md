@@ -142,11 +142,12 @@ The installer auto-selects `config-server.yaml` or `config-agent.yaml`, detects 
 
 > **CIS hardening**: if enabled, kernel parameters take effect immediately. A reboot after installation is recommended to verify settings persist.
 
-### 4. Use kubectl
+### 4. Use kubectl and helm
 
 ```bash
 export PATH=$PATH:$(pwd)/cmd
 kubectl get nodes
+helm version
 ```
 
 ## Configuration
@@ -160,6 +161,7 @@ Variables marked **auto** are detected at `make prepare` time and can be overrid
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `RKE2_VERSION` | `v1.35.4+rke2r1` | RKE2 version to install |
+| `HELM_VERSION` | **auto** latest stable | Helm version (e.g. `3.17.0`); fetched from GitHub releases if empty |
 | `ARCH` | **auto** `uname -m` | Architecture (`amd64` \| `arm64`) |
 | `TARGET_OS` | **auto** build OS | Target OS family (`rhel` \| `ubuntu`) |
 | `LINUX_MAJOR` | **auto** `VERSION_ID` | RHEL major version for RPM repo |

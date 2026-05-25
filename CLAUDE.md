@@ -15,6 +15,7 @@ bundle/                   ← online machine: fetch and package artifacts
   bundle.mk               ← all Make targets
   fetch-install.sh        ← downloads install.sh from get.rke2.io
   fetch-artifacts.sh      ← downloads RKE2 image tarballs and verifies checksums
+  fetch-helm.sh           ← downloads Helm binary into output/cmd/
   build-rpm-repo.sh       ← syncs RKE2 RPM repos (RHEL only, requires createrepo_c)
   gen-config.sh           ← generates config-server.yaml and config-agent.yaml
 deploy/                   ← air-gap machine: interactive installer and scripts
@@ -110,6 +111,7 @@ ghcr.io/org/my-app:v1.0: internal.registry/my-app:v1.0
 
 | Variable | Required | Description |
 |----------|----------|-------------|
+| `HELM_VERSION` | — | Helm version (e.g. `3.17.0`); auto-fetched from GitHub releases if empty |
 | `TOKEN` | — | Shared cluster secret; auto-generated on first run if empty |
 | `NODE_NAME` | — | First server hostname; auto-detected from `hostname -s` if empty |
 | `NODE_IP` | — | First server IP; auto-detected from primary route (`ip route get 1.1.1.1`) if empty |
