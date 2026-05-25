@@ -325,3 +325,9 @@ if [[ "${CIS}" == "true" ]]; then
 else
   echo "Installation complete."
 fi
+
+if [[ "${NODE_ROLE}" == "server-init" || "${NODE_ROLE}" == "server-additional" ]]; then
+  echo ""
+  echo "To use kubectl, helm, and other tools (server node only):"
+  echo "  export PATH=\$PATH:$(pwd)/cmd"
+fi
