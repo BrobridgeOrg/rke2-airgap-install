@@ -37,10 +37,30 @@ make prepare TARGET_OS=ubuntu  # skip RPM repo for Ubuntu target machines
 make bundle               # package everything into rke2-airgap-<version>-<arch>.tar.gz
 ```
 
-This produces **two config files** in `output/`, plus an empty `images/` directory:
+After `make prepare`, `output/` contains:
+
+```
+output/
+  artifacts/          ← RKE2 install.sh, binary tarball, image tarballs
+  rpm-repo/           ← RPM packages + repodata (RHEL only)
+  images/             ← drop extra image tarballs and retag.yaml here
+  bin/
+    helm              ← Helm binary
+  config-server.yaml  ← RKE2 config for first server node
+  config-agent.yaml   ← RKE2 config for agent nodes (token + server URL)
+  rke2-version.txt
+  install.sh
+  scripts/
+  cmd/
+    kubectl           ← wrapper (KUBECONFIG pre-set)
+    crictl
+    ctr
+    helm              ← wrapper → ../bin/helm (KUBECONFIG pre-set)
+```
+
+The two config files are:
 - `config-server.yaml` — for the first (init) server node
 - `config-agent.yaml` — for agent nodes; `server:` is pre-set to the first server's IP
-- `images/` — drop extra image tarballs and `retag.yaml` here before bundling
 
 #### Private registry (optional)
 

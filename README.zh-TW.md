@@ -35,10 +35,30 @@ make prepare TARGET_OS=ubuntu  # Ubuntu 目標機器，跳過 RPM repo 步驟
 make bundle                    # 打包成 rke2-airgap-<version>-<arch>.tar.gz
 ```
 
-執行後會在 `output/` 產生**兩份設定檔**，以及一個空的 `images/` 目錄：
+`make prepare` 執行後，`output/` 結構如下：
+
+```
+output/
+  artifacts/          ← RKE2 install.sh、binary tarball、image tarballs
+  rpm-repo/           ← RPM 套件 + repodata（僅 RHEL）
+  images/             ← 放置額外映像檔與 retag.yaml
+  bin/
+    helm              ← Helm binary
+  config-server.yaml  ← 第一台 Server 節點的 RKE2 設定檔
+  config-agent.yaml   ← Agent 節點的 RKE2 設定檔（含 token 與 server URL）
+  rke2-version.txt
+  install.sh
+  scripts/
+  cmd/
+    kubectl           ← wrapper（已預設 KUBECONFIG）
+    crictl
+    ctr
+    helm              ← wrapper → ../bin/helm（已預設 KUBECONFIG）
+```
+
+兩份設定檔說明：
 - `config-server.yaml` — 適用於第一台（初始化）Server 節點
 - `config-agent.yaml` — 適用於 Agent 節點；`server:` 欄位已預設指向第一台 Server 的 IP
-- `images/` — 在打包前將額外映像檔與 `retag.yaml` 放置於此
 
 #### 私有 Registry（選用）
 
