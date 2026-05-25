@@ -165,6 +165,8 @@ The installer auto-selects `config-server.yaml` or `config-agent.yaml`, detects 
 
 ### 4. Use kubectl and helm
 
+> **Server nodes only.** The `cmd/` wrappers require the kubeconfig at `/etc/rancher/rke2/rke2.yaml`, which is only generated on server nodes. Run these commands on a server node.
+
 ```bash
 export PATH=$PATH:$(pwd)/cmd
 kubectl get nodes

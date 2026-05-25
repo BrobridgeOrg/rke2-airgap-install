@@ -163,6 +163,8 @@ First server URL [https://192.168.1.10:9345]:
 
 ### 4. 使用 kubectl 與 helm
 
+> **僅限 Server 節點。** `cmd/` 底下的 wrapper 需要 `/etc/rancher/rke2/rke2.yaml`，此檔案只會在 Server 節點上產生。請在 Server 節點上執行以下指令。
+
 ```bash
 export PATH=$PATH:$(pwd)/cmd
 kubectl get nodes
