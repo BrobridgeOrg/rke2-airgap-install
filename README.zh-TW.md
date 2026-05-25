@@ -35,9 +35,10 @@ make prepare TARGET_OS=ubuntu  # Ubuntu 目標機器，跳過 RPM repo 步驟
 make bundle                    # 打包成 rke2-airgap-<version>-<arch>.tar.gz
 ```
 
-執行後會在 `output/` 產生**兩份設定檔**：
+執行後會在 `output/` 產生**兩份設定檔**，以及一個空的 `images/` 目錄：
 - `config-server.yaml` — 適用於第一台（初始化）Server 節點
 - `config-agent.yaml` — 適用於 Agent 節點；`server:` 欄位已預設指向第一台 Server 的 IP
+- `images/` — 在打包前將額外映像檔與 `retag.yaml` 放置於此
 
 #### 私有 Registry（選用）
 
@@ -97,23 +98,45 @@ tar -xzf rke2-airgap-v1.35.3+rke2r1-amd64.tar.gz
 ./install.sh
 ```
 
-安裝程式會提示選擇節點類型：
+安裝程式會依序進行幾個互動步驟，再執行安裝腳本。
+
+**第一步 — 選擇節點類型**
 
 ```
 Node type:
   1) Server (first node)       ← 初始化叢集
-  2) Server (additional node)  ← 提示輸入第一台 Server URL，自動 patch 設定檔
+  2) Server (additional node)  ← 加入現有叢集
   3) Agent
 ```
 
-選擇 Server 節點後，安裝程式會進一步詢問節點名稱與 IP，並以自動偵測的結果作為預設值：
+**第二步 — 節點身份**（所有節點類型）
+
+從當前機器自動偵測，直接按 Enter 接受，或輸入新值覆蓋。無法自動偵測時會顯示範例值。
 
 ```
 Node name [my-server]:
 Node IP   [192.168.1.10]:
 ```
 
-程式會根據選擇自動選用 `config-server.yaml` 或 `config-agent.yaml`，從套件與設定檔中偵測 CNI 和 CIS 設定，再依序執行安裝腳本。
+**第三步 — TLS SANs**（僅 Server 節點）
+
+顯示一定會包含的 SAN，並詢問是否需要額外新增。
+
+```
+TLS SANs
+  Always included: my-server, 192.168.1.10
+  Additional (space-separated, leave blank to skip):
+```
+
+**第四步 — 第一台 Server URL**（Agent 與 additional server）
+
+Agent 節點會以 `config-agent.yaml` 中打包時寫入的 URL 作為預設值。
+
+```
+First server URL [https://192.168.1.10:9345]:
+```
+
+程式接著根據選擇自動選用 `config-server.yaml` 或 `config-agent.yaml`，從套件與設定檔中偵測 CNI 和 CIS 設定，確認後依序執行安裝腳本。
 
 > **CIS 強化**：若已啟用，核心參數會立即套用。建議安裝完成後重新開機，確認設定在重啟後仍然生效。
 
@@ -178,9 +201,7 @@ CNI=canal
 
 **額外 Server / Agent**
 
-將相同的安裝包傳輸過去，執行 `./install.sh` 並選擇：
-- `Server (additional node)` — 提示輸入第一台 Server URL，節點身份自動偵測
-- `Agent` — 使用 `config-agent.yaml`，其中 `server:` 已預設指向第一台 Server
+將相同的安裝包傳輸過去，執行 `./install.sh` 並選擇對應的節點類型。安裝程式會對每個節點詢問節點身份（名稱與 IP），並在 Agent 及 additional server 節點上詢問第一台 Server 的 URL。Agent 的預設 URL 來自打包時寫入 `config-agent.yaml` 的值，可直接確認或覆蓋。
 
 ## Make 指令
 

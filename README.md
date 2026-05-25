@@ -37,9 +37,10 @@ make prepare TARGET_OS=ubuntu  # skip RPM repo for Ubuntu target machines
 make bundle               # package everything into rke2-airgap-<version>-<arch>.tar.gz
 ```
 
-This produces **two config files** in `output/`:
+This produces **two config files** in `output/`, plus an empty `images/` directory:
 - `config-server.yaml` — for the first (init) server node
 - `config-agent.yaml` — for agent nodes; `server:` is pre-set to the first server's IP
+- `images/` — drop extra image tarballs and `retag.yaml` here before bundling
 
 #### Private registry (optional)
 
@@ -99,23 +100,45 @@ Run the interactive installer:
 ./install.sh
 ```
 
-The installer prompts for the node type:
+The installer walks through a short interactive setup, then runs the numbered scripts in order.
+
+**Step 1 — Node type**
 
 ```
 Node type:
   1) Server (first node)       ← init cluster
-  2) Server (additional node)  ← prompts for first server URL, patches config
+  2) Server (additional node)  ← join an existing cluster
   3) Agent
 ```
 
-For server nodes, the installer then prompts for node name and IP, auto-detecting both from the current machine as defaults:
+**Step 2 — Node identity** (all node types)
+
+Auto-detected from the current machine; press Enter to accept or type to override. When auto-detection fails, an example is shown instead.
 
 ```
 Node name [my-server]:
 Node IP   [192.168.1.10]:
 ```
 
-It auto-selects `config-server.yaml` or `config-agent.yaml` based on the selection, detects CNI and CIS from artifacts and config, then runs the numbered scripts in order.
+**Step 3 — TLS SANs** (server nodes only)
+
+Always-included SANs are shown; additional ones are optional.
+
+```
+TLS SANs
+  Always included: my-server, 192.168.1.10
+  Additional (space-separated, leave blank to skip):
+```
+
+**Step 4 — First server URL** (agent and additional server)
+
+Agent nodes show the URL baked into `config-agent.yaml` as a default.
+
+```
+First server URL [https://192.168.1.10:9345]:
+```
+
+The installer auto-selects `config-server.yaml` or `config-agent.yaml`, detects CNI and CIS from the artifacts and config, then confirms before running.
 
 > **CIS hardening**: if enabled, kernel parameters take effect immediately. A reboot after installation is recommended to verify settings persist.
 
@@ -129,8 +152,6 @@ kubectl get nodes
 ## Configuration
 
 All options are set in `config.env` (copied from `config.env.example`):
-
-Variables marked **auto** are detected at `make prepare` time and can be overridden by setting them in `config.env`.
 
 Variables marked **auto** are detected at `make prepare` time and can be overridden by setting them in `config.env`.
 
@@ -182,9 +203,7 @@ CNI=canal
 
 **Additional server / Agent**
 
-Transfer the same bundle. Run `./install.sh` and select:
-- `Server (additional node)` — prompted for the first server URL, node identity auto-detected
-- `Agent` — uses `config-agent.yaml` which already has `server:` set to the first server
+Transfer the same bundle. Run `./install.sh` and select the appropriate role. The installer prompts for node identity (name and IP) on every node, and asks for the first server URL on agent and additional server nodes. The agent default URL comes from `config-agent.yaml` baked at bundle time and can be confirmed or overridden.
 
 ## Make Targets
 
