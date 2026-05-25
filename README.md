@@ -44,6 +44,7 @@ output/
   artifacts/          ← RKE2 install.sh, binary tarball, image tarballs
   rpm-repo/           ← RPM packages + repodata (RHEL only)
   images/             ← drop extra image tarballs and retag.yaml here
+  charts/             ← drop Helm charts (.tgz) and values.yaml files here
   bin/
     helm              ← Helm binary
   config-server.yaml  ← RKE2 config for first server node

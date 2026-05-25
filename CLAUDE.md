@@ -79,6 +79,7 @@ After `make prepare`, `output/` contains:
 artifacts/          ← install.sh + binary tarball + image tarballs
 rpm-repo/           ← RPM packages + repodata (RHEL only)
 images/             ← auto-created; drop extra tarballs and retag.yaml here
+charts/             ← auto-created; drop Helm charts (.tgz) and values.yaml files here
 bin/                ← auto-created; downloaded tool binaries (helm, ...)
 config-server.yaml  ← generated RKE2 config for first server node
 config-agent.yaml   ← generated RKE2 config for agent nodes (token + server URL)

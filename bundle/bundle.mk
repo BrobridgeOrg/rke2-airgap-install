@@ -88,6 +88,7 @@ prepare: $(_PREPARE_DEPS)
 	cp -r deploy/. $(OUT_DIR)/
 	mkdir -p $(OUT_DIR)/images
 	mkdir -p $(OUT_DIR)/bin
+	mkdir -p $(OUT_DIR)/charts
 	echo "$(RKE2_VERSION)" > $(OUT_DIR)/rke2-version.txt
 	@echo ""
 	@echo "Output ready at: $(OUT_DIR)"
