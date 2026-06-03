@@ -20,7 +20,8 @@ bundle/                   ← online machine: fetch and package artifacts
   gen-config.sh           ← generates config-server.yaml and config-agent.yaml
 deploy/                   ← air-gap machine: interactive installer and scripts
   install.sh              ← interactive installer (entry point)
-  scripts/                ← numbered scripts invoked by install.sh
+  upgrade.sh              ← single-node in-place upgrader (entry point)
+  scripts/                ← numbered scripts invoked by install.sh and upgrade.sh
     01-import-rpm-repo.sh   ← registers local RPM repo for offline install
     02-set-firewalld.sh     ← opens required firewall ports and CNI interfaces
     03-set-cis-optional.sh  ← applies CIS kernel hardening (optional)
@@ -86,6 +87,7 @@ config-server.yaml  ← generated RKE2 config for first server node
 config-agent.yaml   ← generated RKE2 config for agent nodes (token + server URL)
 rke2-version.txt    ← RKE2 version string
 install.sh
+upgrade.sh
 scripts/
   01-import-rpm-repo.sh
   02-set-firewalld.sh

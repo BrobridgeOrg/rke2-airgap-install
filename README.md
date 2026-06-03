@@ -52,6 +52,7 @@ output/
   config-agent.yaml   ← RKE2 config for agent nodes (token + server URL)
   rke2-version.txt
   install.sh
+  upgrade.sh
   scripts/
   cmd/
     kubectl           ← server only; wrapper with KUBECONFIG pre-set
@@ -164,7 +165,47 @@ The installer auto-selects `config-server.yaml` or `config-agent.yaml`, detects 
 
 > **CIS hardening**: if enabled, kernel parameters take effect immediately. A reboot after installation is recommended to verify settings persist.
 
-### 4. Use kubectl and helm
+### 4. Upgrade (air-gap machine)
+
+To upgrade an existing node to a newer RKE2 version, prepare a new bundle with the updated `RKE2_VERSION`, transfer it to the node, extract it alongside the existing bundle, and run:
+
+```bash
+./upgrade.sh
+```
+
+The upgrader prompts for the node role (server or agent), shows a summary of the current and new version, and waits for confirmation before proceeding.
+
+```
+╔══════════════════════════════════════╗
+║     RKE2 Air-Gap Upgrader            ║
+╚══════════════════════════════════════╝
+
+Node role:
+  1) Server (default)
+  2) Agent
+
+┌─────────────────────────────────────┐
+│ Upgrade summary                     │
+├─────────────────────────────────────┤
+│  OS:       rhel                     │
+│  Role:     server                   │
+│  Current:  v1.28.5+rke2r1           │
+│  New:      v1.29.3+rke2r1           │
+└─────────────────────────────────────┘
+
+Press Enter to begin, or Ctrl+C to cancel...
+```
+
+The upgrade sequence is: stop service → reinstall binaries → reload images → restart service → retag images. The existing `/etc/rancher/rke2/config.yaml` is left untouched.
+
+You can also skip the prompt with `--role`:
+
+```bash
+./upgrade.sh --role server
+./upgrade.sh --role agent
+```
+
+### 5. Use kubectl and helm
 
 > **Server nodes only.** The `cmd/` wrappers require the kubeconfig at `/etc/rancher/rke2/rke2.yaml`, which is only generated on server nodes. Run these commands on a server node.
 
