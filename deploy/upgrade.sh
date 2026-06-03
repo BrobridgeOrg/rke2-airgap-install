@@ -114,7 +114,8 @@ fi
 
 # ── Version detection ─────────────────────────────────────────────────────────
 
-CURRENT_VERSION="$(rke2 --version 2>/dev/null | awk '/^rke2 version/{print $3}' || echo "(not installed)")"
+CURRENT_VERSION="$(rke2 --version 2>/dev/null | awk '/^rke2 version/{print $3}')"
+CURRENT_VERSION="${CURRENT_VERSION:-(not installed)}"
 VERSION_FILE="${SCRIPT_DIR}/rke2-version.txt"
 if [[ -f "${VERSION_FILE}" ]]; then
   NEW_VERSION="$(cat "${VERSION_FILE}")"

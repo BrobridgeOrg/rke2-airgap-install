@@ -108,5 +108,7 @@ fi
 
 echo ""
 echo "Done."
-echo "Next step: start RKE2"
-echo "  ./06-start-rke2.sh --role ${ROLE}"
+if [[ "${SKIP_CONFIG}" == "false" ]]; then
+  echo "Next step: start RKE2"
+  echo "  ./06-start-rke2.sh --role ${ROLE}"
+fi
