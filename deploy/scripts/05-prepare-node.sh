@@ -11,6 +11,7 @@ REGISTRIES_DEST="/etc/rancher/rke2/registries.yaml"
 ARTIFACTS_SRC="./artifacts"
 IMAGES_SRC="./images"
 IMAGES_DEST="/var/lib/rancher/rke2/agent/images"
+SKIP_CONFIG="false"
 
 # Usage
 usage() {
@@ -20,11 +21,12 @@ Usage: $(basename "$0") [options]
 Places config files and pre-loads images before starting RKE2.
 
 Options:
-  -r, --role       Node role: server | agent  (default: ${ROLE})
-  -c, --config     Path to config.yaml  (default: ${CONFIG_SRC})
-  -a, --artifacts  Path to artifacts directory  (default: ${ARTIFACTS_SRC})
-  -i, --images     Path to extra images directory  (default: ${IMAGES_SRC})
-  -h, --help       Show this help
+  -r, --role         Node role: server | agent  (default: ${ROLE})
+  -c, --config       Path to config.yaml  (default: ${CONFIG_SRC})
+  -a, --artifacts    Path to artifacts directory  (default: ${ARTIFACTS_SRC})
+  -i, --images       Path to extra images directory  (default: ${IMAGES_SRC})
+      --skip-config  Skip copying config files (for upgrades)
+  -h, --help         Show this help
 
 Examples:
   $(basename "$0") --role server
@@ -40,6 +42,7 @@ while [[ $# -gt 0 ]]; do
     -c|--config)     CONFIG_SRC="$2";    shift 2 ;;
     -a|--artifacts)  ARTIFACTS_SRC="$2"; shift 2 ;;
     -i|--images)     IMAGES_SRC="$2";    shift 2 ;;
+    --skip-config)   SKIP_CONFIG="true"; shift   ;;
     -h|--help)       usage ;;
     *) echo "Unknown option: $1"; usage ;;
   esac
@@ -50,7 +53,7 @@ case "${ROLE}" in
   *) echo "Error: unsupported role: ${ROLE}"; exit 1 ;;
 esac
 
-if [[ ! -f "${CONFIG_SRC}" ]]; then
+if [[ "${SKIP_CONFIG}" == "false" ]] && [[ ! -f "${CONFIG_SRC}" ]]; then
   echo "Error: config file not found: ${CONFIG_SRC}"
   exit 1
 fi
@@ -59,14 +62,18 @@ fi
 echo "Role: ${ROLE}"
 echo ""
 
-echo "[1] Copying config files"
-sudo mkdir -p "$(dirname "${CONFIG_DEST}")"
-sudo cp "${CONFIG_SRC}" "${CONFIG_DEST}"
-echo "  -> ${CONFIG_DEST}"
+if [[ "${SKIP_CONFIG}" == "false" ]]; then
+  echo "[1] Copying config files"
+  sudo mkdir -p "$(dirname "${CONFIG_DEST}")"
+  sudo cp "${CONFIG_SRC}" "${CONFIG_DEST}"
+  echo "  -> ${CONFIG_DEST}"
 
-if [[ -f "${REGISTRIES_SRC}" ]]; then
-  sudo cp "${REGISTRIES_SRC}" "${REGISTRIES_DEST}"
-  echo "  -> ${REGISTRIES_DEST}"
+  if [[ -f "${REGISTRIES_SRC}" ]]; then
+    sudo cp "${REGISTRIES_SRC}" "${REGISTRIES_DEST}"
+    echo "  -> ${REGISTRIES_DEST}"
+  fi
+else
+  echo "[1] Skipping config files (--skip-config)"
 fi
 
 echo "[2] Copying RKE2 image tarballs"
