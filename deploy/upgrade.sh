@@ -116,7 +116,12 @@ fi
 
 CURRENT_VERSION="$(rke2 --version 2>/dev/null | awk '/^rke2 version/{print $3}' || echo "(not installed)")"
 VERSION_FILE="${SCRIPT_DIR}/rke2-version.txt"
-NEW_VERSION="$(cat "${VERSION_FILE}" 2>/dev/null || echo "(unknown)")"
+if [[ -f "${VERSION_FILE}" ]]; then
+  NEW_VERSION="$(cat "${VERSION_FILE}")"
+else
+  echo "Warning: rke2-version.txt not found — bundle version unknown"
+  NEW_VERSION="(unknown)"
+fi
 
 # ── Summary ───────────────────────────────────────────────────────────────────
 
@@ -128,6 +133,7 @@ printf "│  %-10s  %-22s │\n" "Role:"    "${ROLE}"
 printf "│  %-10s  %-22s │\n" "Current:" "${CURRENT_VERSION}"
 printf "│  %-10s  %-22s │\n" "New:"     "${NEW_VERSION}"
 echo "└─────────────────────────────────────┘"
+echo ""
 
 if [[ "${CURRENT_VERSION}" == "${NEW_VERSION}" && "${CURRENT_VERSION}" != "(not installed)" ]]; then
   echo ""
@@ -140,8 +146,12 @@ read -r -p "Press Enter to begin, or Ctrl+C to cancel..."
 # ── Stop service ──────────────────────────────────────────────────────────────
 
 print_header "Stop RKE2"
-echo "Stopping rke2-${ROLE}..."
-sudo systemctl stop "rke2-${ROLE}" || true
+if sudo systemctl is-active --quiet "rke2-${ROLE}" 2>/dev/null; then
+  echo "Stopping rke2-${ROLE}..."
+  sudo systemctl stop "rke2-${ROLE}"
+else
+  echo "Service rke2-${ROLE} is not running, skipping stop"
+fi
 
 # ── Upgrade steps ─────────────────────────────────────────────────────────────
 
