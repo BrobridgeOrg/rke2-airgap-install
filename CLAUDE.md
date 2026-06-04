@@ -19,9 +19,8 @@ bundle/                   ← online machine: fetch and package artifacts
   build-rpm-repo.sh       ← syncs RKE2 RPM repos (RHEL only, requires createrepo_c)
   gen-config.sh           ← generates config-server.yaml and config-agent.yaml
 deploy/                   ← air-gap machine: interactive installer and scripts
-  install.sh              ← interactive installer (entry point)
-  upgrade.sh              ← single-node in-place upgrader (entry point)
-  scripts/                ← numbered scripts invoked by install.sh and upgrade.sh
+  install.sh              ← interactive installer (entry point; detects existing install and redirects to upgrade-node.sh)
+  scripts/                ← numbered scripts invoked by install.sh; upgrade-node.sh lives here too
     01-import-rpm-repo.sh   ← registers local RPM repo for offline install
     02-set-firewalld.sh     ← opens required firewall ports and CNI interfaces
     03-set-cis-optional.sh  ← applies CIS kernel hardening (optional)
@@ -29,6 +28,7 @@ deploy/                   ← air-gap machine: interactive installer and scripts
     05-prepare-node.sh      ← copies config files and pre-loads extra images
     06-start-rke2.sh        ← starts rke2 systemd service
     07-retag-images.sh      ← retags images per images/retag.yaml (optional)
+    upgrade-node.sh         ← single-node in-place upgrader (stop → reinstall → reload images → restart)
   cmd/                    ← wrapper scripts; server nodes: kubectl, helm, crictl, ctr; agent nodes: crictl, ctr
 ```
 
@@ -87,8 +87,8 @@ config-server.yaml  ← generated RKE2 config for first server node
 config-agent.yaml   ← generated RKE2 config for agent nodes (token + server URL)
 rke2-version.txt    ← RKE2 version string
 install.sh
-upgrade.sh
 scripts/
+  upgrade-node.sh
   01-import-rpm-repo.sh
   02-set-firewalld.sh
   03-set-cis-optional.sh

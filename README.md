@@ -52,8 +52,8 @@ output/
   config-agent.yaml   ← RKE2 config for agent nodes (token + server URL)
   rke2-version.txt
   install.sh
-  upgrade.sh
   scripts/
+    upgrade-node.sh
   cmd/
     kubectl           ← server only; wrapper with KUBECONFIG pre-set
     helm              ← server only; wrapper → ../bin/helm with KUBECONFIG pre-set
@@ -170,10 +170,12 @@ The installer auto-selects `config-server.yaml` or `config-agent.yaml`, detects 
 To upgrade an existing node to a newer RKE2 version, prepare a new bundle with the updated `RKE2_VERSION`, transfer it to the node, extract it alongside the existing bundle, and run:
 
 ```bash
-./upgrade.sh
+./scripts/upgrade-node.sh
 ```
 
 The upgrader prompts for the node role (server or agent), shows a summary of the current and new version, and waits for confirmation before proceeding.
+
+If you accidentally run `./install.sh` on a node that already has RKE2, the installer detects it and prints the upgrade hint instead of proceeding.
 
 ```
 ╔══════════════════════════════════════╗
@@ -201,8 +203,8 @@ The upgrade sequence is: stop service → reinstall binaries → reload images �
 You can also skip the prompt with `--role`:
 
 ```bash
-./upgrade.sh --role server
-./upgrade.sh --role agent
+./scripts/upgrade-node.sh --role server
+./scripts/upgrade-node.sh --role agent
 ```
 
 ### 5. Use kubectl and helm

@@ -103,6 +103,17 @@ echo "║     RKE2 Air-Gap Installer           ║"
 echo "╚══════════════════════════════════════╝"
 echo ""
 
+# ── Already installed? ────────────────────────────────────────────────────────
+
+if command -v rke2 &>/dev/null; then
+  _installed="$(rke2 --version 2>/dev/null | awk '/^rke2 version/{print $3}')"
+  echo "RKE2 is already installed (${_installed:-unknown version})."
+  echo "To upgrade to the version in this bundle, run:"
+  echo "  ${SCRIPTS_DIR}/upgrade-node.sh"
+  echo ""
+  exit 0
+fi
+
 # ── Role selection ────────────────────────────────────────────────────────────
 
 if [[ -n "${ROLE}" ]]; then

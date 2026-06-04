@@ -3,12 +3,12 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SCRIPTS_DIR="${SCRIPT_DIR}/scripts"
+DEPLOY_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 # Defaults
 ROLE=""
-ARTIFACTS_DIR="${SCRIPT_DIR}/artifacts"
-IMAGES_DIR="${SCRIPT_DIR}/images"
+ARTIFACTS_DIR="${DEPLOY_DIR}/artifacts"
+IMAGES_DIR="${DEPLOY_DIR}/images"
 
 # Usage
 usage() {
@@ -43,8 +43,8 @@ done
 
 # ── OS detection ──────────────────────────────────────────────────────────────
 
-# shellcheck source=scripts/lib/os-detect.sh
-source "${SCRIPT_DIR}/scripts/lib/os-detect.sh"
+# shellcheck source=lib/os-detect.sh
+source "${SCRIPT_DIR}/lib/os-detect.sh"
 OS_FAMILY="$(detect_os_family)"
 
 # ── helpers ───────────────────────────────────────────────────────────────────
@@ -116,7 +116,7 @@ fi
 
 CURRENT_VERSION="$(rke2 --version 2>/dev/null | awk '/^rke2 version/{print $3}')"
 CURRENT_VERSION="${CURRENT_VERSION:-(not installed)}"
-VERSION_FILE="${SCRIPT_DIR}/rke2-version.txt"
+VERSION_FILE="${DEPLOY_DIR}/rke2-version.txt"
 if [[ -f "${VERSION_FILE}" ]]; then
   NEW_VERSION="$(cat "${VERSION_FILE}")"
 else
@@ -157,17 +157,17 @@ fi
 # ── Upgrade steps ─────────────────────────────────────────────────────────────
 
 run_step "Install RKE2" \
-  "${SCRIPTS_DIR}/04-install-rke2.sh" --role "${ROLE}" --artifacts "${ARTIFACTS_DIR}"
+  "${SCRIPT_DIR}/04-install-rke2.sh" --role "${ROLE}" --artifacts "${ARTIFACTS_DIR}"
 
 run_step "Load images" \
-  "${SCRIPTS_DIR}/05-prepare-node.sh" --role "${ROLE}" --skip-config \
+  "${SCRIPT_DIR}/05-prepare-node.sh" --role "${ROLE}" --skip-config \
     --artifacts "${ARTIFACTS_DIR}" --images "${IMAGES_DIR}"
 
 run_step "Start RKE2" \
-  "${SCRIPTS_DIR}/06-start-rke2.sh" --role "${ROLE}"
+  "${SCRIPT_DIR}/06-start-rke2.sh" --role "${ROLE}"
 
 run_step "Retag images" \
-  "${SCRIPTS_DIR}/07-retag-images.sh"
+  "${SCRIPT_DIR}/07-retag-images.sh"
 
 echo ""
 echo "Upgrade complete."

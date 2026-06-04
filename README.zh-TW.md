@@ -50,8 +50,8 @@ output/
   config-agent.yaml   ← Agent 節點的 RKE2 設定檔（含 token 與 server URL）
   rke2-version.txt
   install.sh
-  upgrade.sh
   scripts/
+    upgrade-node.sh
   cmd/
     kubectl           ← 僅限 Server 節點；wrapper（已預設 KUBECONFIG）
     helm              ← 僅限 Server 節點；wrapper → ../bin/helm（已預設 KUBECONFIG）
@@ -168,10 +168,12 @@ First server URL [https://192.168.1.10:9345]:
 若需將現有節點升級至新版 RKE2，請在線上機器以新版本準備安裝包，將其傳輸至節點解壓縮後執行：
 
 ```bash
-./upgrade.sh
+./scripts/upgrade-node.sh
 ```
 
 升級程式會詢問節點角色（server 或 agent），顯示目前版本與新版本摘要，確認後再執行升級。
+
+若在已安裝 RKE2 的節點上誤執行 `./install.sh`，安裝程式會偵測到已安裝並顯示升級提示，而不會繼續安裝流程。
 
 ```
 ╔══════════════════════════════════════╗
@@ -199,8 +201,8 @@ Press Enter to begin, or Ctrl+C to cancel...
 也可以透過 `--role` 跳過互動步驟：
 
 ```bash
-./upgrade.sh --role server
-./upgrade.sh --role agent
+./scripts/upgrade-node.sh --role server
+./scripts/upgrade-node.sh --role agent
 ```
 
 ### 5. 使用 kubectl 與 helm
