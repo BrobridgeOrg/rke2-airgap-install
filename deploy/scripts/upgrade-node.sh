@@ -156,6 +156,11 @@ fi
 
 # ── Upgrade steps ─────────────────────────────────────────────────────────────
 
+if [[ "${OS_FAMILY}" == "rhel" ]] && [[ -d "${DEPLOY_DIR}/rpm-repo" ]]; then
+  run_step "Update RPM repo" \
+    "${SCRIPT_DIR}/01-import-rpm-repo.sh" --src "${DEPLOY_DIR}/rpm-repo"
+fi
+
 run_step "Install RKE2" \
   "${SCRIPT_DIR}/04-install-rke2.sh" --role "${ROLE}" --artifacts "${ARTIFACTS_DIR}"
 
